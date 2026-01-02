@@ -85,6 +85,17 @@
             "{\"name\": \"nuget.org\",\"url\": \"https://api.nuget.org/v3/index.json\"}"
           ],
           "description": "NuGet sources"
+        },
+        "NugetGallery.logLevel": {
+          "type": "string",
+          "default": "INFO",
+          "enum": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR"
+          ],
+          "description": "Minimum logging level"
         }
       }
     }
