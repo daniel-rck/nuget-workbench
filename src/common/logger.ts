@@ -18,10 +18,25 @@ export class Logger {
     private static _isEnabled: boolean = false;
     private static _provider: BasicTracerProvider;
     private static _tracer: Tracer;
+    private static _logLevel: number = 1; // Default to INFO
+
+    private static readonly _logLevels: { [key: string]: number } = {
+        'DEBUG': 0,
+        'INFO': 1,
+        'WARN': 2,
+        'ERROR': 3
+    };
 
     public static configure(context: vscode.ExtensionContext): void {
         this._outputChannel = vscode.window.createOutputChannel("NuGet Gallery");
         context.subscriptions.push(this._outputChannel);
+
+        this.updateLogLevel();
+        context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration('NugetGallery.logLevel')) {
+                this.updateLogLevel();
+            }
+        }));
 
         const telemetryAddress = process.env.TELEMETRY_ADDRESS;
         if (telemetryAddress && vscode.env.isTelemetryEnabled) {
@@ -59,12 +74,22 @@ export class Logger {
     }
 
     public static log(level: string, message: string, ...args: any[]): void {
+        const levelValue = this._logLevels[level] ?? 1;
+        if (levelValue < this._logLevel) {
+            return;
+        }
+
         const formattedMessage = util.format(message, ...args);
         if (this._outputChannel) {
             const timestamp = new Date().toISOString();
             this._outputChannel.appendLine(`[${timestamp}] [${level}] ${formattedMessage}`);
         }
         this.sendEvent('log', { level, message: formattedMessage });
+    }
+
+    private static updateLogLevel(): void {
+        const logLevel = vscode.workspace.getConfiguration('NugetGallery').get<string>('logLevel', 'INFO');
+        this._logLevel = this._logLevels[logLevel] ?? 1;
     }
 
     public static info(message: string, ...args: any[]): void {
