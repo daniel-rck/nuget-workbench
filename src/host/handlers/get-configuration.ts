@@ -1,9 +1,11 @@
 import { IRequestHandler } from "@/common/messaging/core/types";
 import * as vscode from "vscode";
 import NuGetConfigResolver from "../utilities/nuget-config-resolver";
+import { Logger } from "../../common/logger";
 
 export default class GetConfiguration implements IRequestHandler<GetConfigurationRequest, GetConfigurationResponse> {
   async HandleAsync(request: GetConfigurationRequest): Promise<GetConfigurationResponse> {
+    Logger.info("GetConfiguration: Retrieving configuration");
     let config = vscode.workspace.getConfiguration("NugetGallery");
     try {
       await config.update("sources", undefined, vscode.ConfigurationTarget.Workspace);

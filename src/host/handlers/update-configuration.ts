@@ -1,9 +1,11 @@
 import { IRequestHandler } from "@/common/messaging/core/types";
 import * as vscode from "vscode";
+import { Logger } from "../../common/logger";
 export default class UpdateConfiguration
   implements IRequestHandler<UpdateConfigurationRequest, UpdateConfigurationResponse>
 {
   async HandleAsync(request: UpdateConfigurationRequest): Promise<UpdateConfigurationResponse> {
+    Logger.info("UpdateConfiguration: Updating configuration");
     let config = vscode.workspace.getConfiguration("NugetGallery");
 
     let sources = request.Configuration.Sources.map((x) => 
