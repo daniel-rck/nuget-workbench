@@ -21,6 +21,11 @@ export class GetProjects implements IRequestHandler<GetProjectsRequest, GetProje
       .forEach((x) => {
         try {
           const cpmVersions = CpmResolver.GetPackageVersions(x);
+          if (cpmVersions) {
+            Logger.debug(`GetProjects.HandleAsync: CPM enabled for ${x} with ${cpmVersions.size} versions`);
+          } else {
+            Logger.debug(`GetProjects.HandleAsync: CPM not enabled for ${x}`);
+          }
           let project = ProjectParser.Parse(x, cpmVersions);
           projects.push(project);
         } catch (e) {

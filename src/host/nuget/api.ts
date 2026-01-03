@@ -45,6 +45,7 @@ export default class NuGetApi {
     skip: number,
     take: number
   ): Promise<GetPackagesResponse> {
+    Logger.debug(`NuGetApi.GetPackagesAsync: Fetching packages (filter: '${filter}', prerelease: ${prerelease}, skip: ${skip}, take: ${take})`);
     await this.EnsureSearchUrl();
     let result = await this.ExecuteGet(this._searchUrl, {
       params: {
@@ -81,10 +82,12 @@ export default class NuGetApi {
   }
 
   async GetPackageAsync(id: string): Promise<GetPackageResponse> {
+    Logger.debug(`NuGetApi.GetPackageAsync: Fetching package info for ${id}`);
     await this.EnsureSearchUrl();
     let url = new URL([id.toLowerCase(), "index.json"].join("/"), this._packageInfoUrl).href;
     let items: Array<any> = [];
     try {
+      Logger.debug(`NuGetApi.GetPackageAsync: GET ${url}`);
       let result = await this.http.get(url);
       if (result instanceof AxiosError) {
         Logger.error("NuGetApi.GetPackageAsync: Axios Error Data:", result.response?.data);
@@ -182,6 +185,7 @@ export default class NuGetApi {
   private async EnsureSearchUrl() {
     if (this._searchUrl !== "" && this._packageInfoUrl !== "") return;
 
+    Logger.debug(`NuGetApi.EnsureSearchUrl: resolving service URLs from ${this._url}`);
     let response = await this.ExecuteGet(this._url);
 
     this._searchUrl = await this.GetUrlFromNugetDefinition(response, "SearchQueryService");
@@ -190,6 +194,8 @@ export default class NuGetApi {
     this._packageInfoUrl = await this.GetUrlFromNugetDefinition(response, "RegistrationsBaseUrl/3.6.0");
     if (this._packageInfoUrl == "") throw { message: "RegistrationsBaseUrl couldn't be found" };
     if (!this._packageInfoUrl.endsWith("/")) this._packageInfoUrl += "/";
+
+    Logger.debug(`NuGetApi.EnsureSearchUrl: SearchUrl=${this._searchUrl}, PackageInfoUrl=${this._packageInfoUrl}`);
   }
 
   private async GetUrlFromNugetDefinition(response: any, type: string): Promise<string> {
@@ -202,6 +208,7 @@ export default class NuGetApi {
     url: string,
     config?: AxiosRequestConfig<any> | undefined
   ): Promise<AxiosResponse<any, any>> {
+    Logger.debug(`NuGetApi.ExecuteGet: Requesting ${url}`);
     const response = await this.http.get(url, config);
     if (response instanceof AxiosError) {
       Logger.error("NuGetApi.ExecuteGet: Axios Error Data:", response.response?.data);

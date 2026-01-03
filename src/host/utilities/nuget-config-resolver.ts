@@ -20,6 +20,7 @@ export default class NuGetConfigResolver {
   private static readonly CONFIG_FILENAMES = ["nuget.config", "NuGet.Config", "NuGet.config"];
 
   static async GetSourcesAndDecodePasswords(workspaceRoot?: string): Promise<SourceWithCredentials[]> {
+    Logger.debug(`NuGetConfigResolver.GetSourcesAndDecodePasswords: Starting resolution (workspaceRoot: ${workspaceRoot})`);
     const config = vscode.workspace.getConfiguration("NugetGallery");
     const sourcesMap = new Map<string, SourceWithCredentials>();
     
@@ -44,6 +45,7 @@ export default class NuGetConfigResolver {
           url?: string; 
           passwordScriptPath?: string;
         };
+        Logger.debug(`NuGetConfigResolver.GetSourcesAndDecodePasswords: Found source from setting: ${parsed.name}`);
         if (parsed.name) {
           const existingSource = sourcesMap.get(parsed.name);
           if (existingSource) {
@@ -71,6 +73,7 @@ export default class NuGetConfigResolver {
       
       if (passwordScriptPath && source.Password) {
         try {
+          Logger.debug(`NuGetConfigResolver.GetSourcesAndDecodePasswords: Decoding password for ${source.Name}`);
           const decodedPassword = await PasswordScriptExecutor.ExecuteScript(
             passwordScriptPath,
             source.Password
@@ -82,6 +85,7 @@ export default class NuGetConfigResolver {
           CredentialsCache.set(source.Name, source.Username, source.Password);
         }
       } else if (source.Username || source.Password) {
+        Logger.debug(`NuGetConfigResolver.GetSourcesAndDecodePasswords: Caching credentials for ${source.Name}`);
         CredentialsCache.set(source.Name, source.Username, source.Password);
       }
     }
@@ -90,17 +94,21 @@ export default class NuGetConfigResolver {
   }
 
   static GetSourcesWithCredentials(workspaceRoot?: string): SourceWithCredentials[] {
+    Logger.debug(`NuGetConfigResolver.GetSourcesWithCredentials: Starting resolution (workspaceRoot: ${workspaceRoot})`);
     const sources = new Map<string, SourceWithCredentials>();
     const disabledSources = new Set<string>();
     const credentials = new Map<string, { Username?: string; Password?: string }>();
 
     const configPaths = this.FindAllConfigFiles(workspaceRoot);
+    Logger.debug(`NuGetConfigResolver.GetSourcesWithCredentials: Found config files: ${configPaths.join(", ")}`);
 
     for (const configPath of configPaths) {
       try {
+        Logger.debug(`NuGetConfigResolver.GetSourcesWithCredentials: Parsing ${configPath}`);
         const result = this.ParseConfigFile(configPath);
         
         if (result.clear) {
+          Logger.debug(`NuGetConfigResolver.GetSourcesWithCredentials: 'clear' found in ${configPath}, clearing sources`);
           sources.clear();
           disabledSources.clear();
         }

@@ -22,6 +22,12 @@ class NuGetApiFactory {
       let username = sourceWithCreds?.Username;
       let password = sourceWithCreds?.Password;
 
+      if (username || password) {
+        Logger.debug(`NuGetApiFactory.GetSourceApi: Found credentials for ${url} (username: ${username})`);
+      } else {
+        Logger.debug(`NuGetApiFactory.GetSourceApi: No credentials found for ${url}`);
+      }
+
       this._sourceApiCollection[url] = new NuGetApi(url, username, password);
     } else {
       Logger.debug(`NuGetApiFactory.GetSourceApi: Returning cached API instance for ${url}`);

@@ -38,6 +38,7 @@ export default class UpdateProject implements IRequestHandler<UpdateProjectReque
   private async RemovePackage(request: UpdateProjectRequest): Promise<void> {
     Logger.info(`UpdateProject.RemovePackage: Removing package ${request.PackageId}`);
     const args: Array<string> = ["package", "remove", request.PackageId, "--project", request.ProjectPath.replace(/\\/g, "/")];
+    Logger.debug(`UpdateProject.RemovePackage: Executing: dotnet ${args.join(" ")}`);
     const task = new vscode.Task(
       { type: "dotnet", task: `dotnet remove package` },
       vscode.TaskScope.Workspace,
@@ -60,6 +61,8 @@ export default class UpdateProject implements IRequestHandler<UpdateProjectReque
     if (skipRestore) {
       args.push("--no-restore");
     }
+
+    Logger.debug(`UpdateProject.AddPackage: Executing: dotnet ${args.join(" ")}`);
 
     const task = new vscode.Task(
       { type: "dotnet", task: `dotnet add package` },

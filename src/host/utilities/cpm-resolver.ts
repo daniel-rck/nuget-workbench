@@ -13,7 +13,10 @@ export default class CpmResolver {
       return null;
     }
 
+    Logger.debug(`CpmResolver.GetPackageVersions: Found CPM file at ${cpmFilePath}`);
+
     if (!this.IsCentralPackageManagementEnabled(projectPath, cpmFilePath)) {
+      Logger.debug(`CpmResolver.GetPackageVersions: CPM is disabled for ${projectPath}`);
       return null;
     }
 
@@ -72,6 +75,7 @@ export default class CpmResolver {
       return this.cache.get(cpmFilePath)!;
     }
 
+    Logger.debug(`CpmResolver.ParsePackageVersions: Parsing ${cpmFilePath}`);
     const versionMap = new Map<string, string>();
 
     try {
@@ -88,6 +92,7 @@ export default class CpmResolver {
         }
       });
 
+      Logger.debug(`CpmResolver.ParsePackageVersions: Found ${versionMap.size} package versions in ${cpmFilePath}`);
       this.cache.set(cpmFilePath, versionMap);
     } catch (error) {
       Logger.error(`CpmResolver.ParsePackageVersions: Failed to parse CPM versions from ${cpmFilePath}`, error);
