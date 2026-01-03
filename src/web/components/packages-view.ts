@@ -381,8 +381,7 @@ export class PackagesView extends FASTElement {
         return gutter;
       },
     });
-    this.filters.SourceUrl =
-      this.configuration.Configuration?.Sources[0].Url ?? "";
+    this.filters.SourceUrl = "";
     this.LoadPackages();
     this.LoadProjects();
   }

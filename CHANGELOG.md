@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- 'All' option in source dropdown to search and fetch packages from all configured sources simultaneously
 - Support for Central Package Management (CPM)
   - Automatically detects and resolves package versions from `Directory.Packages.props`
   - Respects individual project opt-out via `<ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>`
