@@ -18,7 +18,7 @@ export class Logger {
     private static _isEnabled: boolean = false;
     private static _provider: BasicTracerProvider;
     private static _tracer: Tracer;
-    private static _logLevel: number = 1; // Default to INFO
+    private static _logLevel: number = 1;
 
     private static readonly _logLevels: { [key: string]: number } = {
         'DEBUG': 0,
@@ -82,7 +82,7 @@ export class Logger {
         const formattedMessage = util.format(message, ...args);
         if (this._outputChannel) {
             const timestamp = new Date().toISOString();
-            this._outputChannel.appendLine(`[${timestamp}] [${level}] ${formattedMessage}`);
+            this._outputChannel.appendLine(`${timestamp} [${level}] ${formattedMessage}`);
         }
         this.sendEvent('log', { level, message: formattedMessage });
     }
