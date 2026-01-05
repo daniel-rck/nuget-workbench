@@ -6,6 +6,7 @@ type GetPackagesRequest = {
   Skip: number;
   Take: number;
   PasswordScriptPath?: string;
+  ForceReload?: boolean;
 };
 
 type GetPackagesResponse = {

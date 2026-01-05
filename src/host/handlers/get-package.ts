@@ -14,6 +14,9 @@ export class GetPackage implements IRequestHandler<GetPackageRequest, GetPackage
         try {
           Logger.info(`GetPackage.HandleAsync: Fetching package ${request.Id} from ${source.Url}`);
           let api = await nugetApiFactory.GetSourceApi(source.Url);
+          if (request.ForceReload) {
+            api.ClearPackageCache(request.Id);
+          }
           let packageResult = await api.GetPackageAsync(request.Id);
 
           if (!packageResult.isError) {
@@ -39,6 +42,9 @@ export class GetPackage implements IRequestHandler<GetPackageRequest, GetPackage
     Logger.info(`GetPackage.HandleAsync: Fetching package ${request.Id} from ${request.Url}`);
     let api = await nugetApiFactory.GetSourceApi(request.Url);
     try {
+      if (request.ForceReload) {
+        api.ClearPackageCache(request.Id);
+      }
       let packageResult = await api.GetPackageAsync(request.Id);
 
       if (packageResult.isError) {

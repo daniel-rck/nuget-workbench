@@ -8,6 +8,10 @@ export class GetPackages implements IRequestHandler<GetPackagesRequest, GetPacka
   async HandleAsync(request: GetPackagesRequest): Promise<GetPackagesResponse> {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 
+    if (request.ForceReload) {
+      nugetApiFactory.ClearCache();
+    }
+
     if (request.Url === "") {
       const sources = await NuGetConfigResolver.GetSourcesAndDecodePasswords(workspaceRoot);
 

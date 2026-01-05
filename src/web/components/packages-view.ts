@@ -27,7 +27,7 @@ const template = html<PackagesView>`
   <div class="container">
     <div class="col" id="packages">
       <search-bar
-        @reload-invoked=${(x) => x.ReloadInvoked()}
+        @reload-invoked=${(x, e) => x.ReloadInvoked((e.event as CustomEvent<boolean>).detail)}
         @filter-changed=${(x, e) =>
           x.UpdatePackagesFilters((e.event as CustomEvent<FilterEvent>).detail)}
       ></search-bar>
@@ -419,7 +419,7 @@ export class PackagesView extends FASTElement {
     );
   }
 
-  LoadProjectsPackages() {
+  async LoadProjectsPackages(forceReload: boolean = false) {
     var packages = this.projects
       ?.flatMap((p) => p.Packages)
       .filter((x) =>
@@ -469,8 +469,14 @@ export class PackagesView extends FASTElement {
         )
     );
 
-    for (let i = 0; i < this.projectsPackages.length; i++) {
-      this.UpdatePackage(this.projectsPackages[i]);
+    if (forceReload) {
+      for (let i = 0; i < this.projectsPackages.length; i++) {
+        await this.UpdatePackage(this.projectsPackages[i], forceReload);
+      }
+    } else {
+      for (let i = 0; i < this.projectsPackages.length; i++) {
+        this.UpdatePackage(this.projectsPackages[i], forceReload);
+      }
     }
   }
 
@@ -485,7 +491,7 @@ export class PackagesView extends FASTElement {
     }
   }
 
-  async UpdatePackage(projectPackage: PackageViewModel) {
+  async UpdatePackage(projectPackage: PackageViewModel, forceReload: boolean = false) {
     let result = await this.mediator.PublishAsync<
       GetPackageRequest,
       GetPackageResponse
@@ -495,6 +501,7 @@ export class PackagesView extends FASTElement {
       SourceName: this.CurrentSource?.Name,
       Prerelease: this.filters.Prerelease,
       PasswordScriptPath: this.CurrentSource?.PasswordScriptPath,
+      ForceReload: forceReload,
     });
 
     if (result.IsFailure || !result.Package) {
@@ -507,9 +514,10 @@ export class PackagesView extends FASTElement {
   }
 
   UpdatePackagesFilters(filters: FilterEvent) {
+    const forceReload = this.filters.Prerelease !== filters.Prerelease;
     this.filters = filters;
-    this.LoadPackages();
-    this.LoadProjectsPackages();
+    this.LoadPackages(false, forceReload);
+    this.LoadProjectsPackages(forceReload);
   }
 
   async SelectPackage(selectedPackage: PackageViewModel) {
@@ -554,12 +562,12 @@ export class PackagesView extends FASTElement {
       this.LoadPackages(true);
   }
 
-  ReloadInvoked() {
-    this.LoadPackages();
-    this.LoadProjectsPackages();
+  ReloadInvoked(forceReload: boolean = false) {
+    this.LoadPackages(false, forceReload);
+    this.LoadProjectsPackages(forceReload);
   }
 
-  async LoadPackages(append: boolean = false) {
+  async LoadPackages(append: boolean = false, forceReload: boolean = false) {
     let _getLoadPackageRequest = () => {
       return {
         Url: this.filters.SourceUrl,
@@ -569,6 +577,7 @@ export class PackagesView extends FASTElement {
         Skip: this.packagesPage * PACKAGE_FETCH_TAKE,
         Take: PACKAGE_FETCH_TAKE,
         PasswordScriptPath: this.CurrentSource?.PasswordScriptPath,
+        ForceReload: forceReload,
       };
     };
 
@@ -611,6 +620,6 @@ export class PackagesView extends FASTElement {
     >(GET_PROJECTS, {});
 
     this.projects = result.Projects.map((x) => new ProjectViewModel(x));
-    this.LoadProjectsPackages();
+    await this.LoadProjectsPackages();
   }
 }

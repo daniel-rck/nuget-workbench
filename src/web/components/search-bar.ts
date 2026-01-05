@@ -100,7 +100,8 @@ export class SearchBar extends FASTElement {
   }
 
   ReloadClicked() {
-    this.$emit("reload-invoked");
+    let forceReload = true;
+    this.$emit("reload-invoked", forceReload);
   }
 
   EmitFilterChangedEvent() {
