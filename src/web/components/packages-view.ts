@@ -599,7 +599,7 @@ export class PackagesView extends FASTElement {
 
   async ReloadInvoked(forceReload: boolean = false) {
     await this.LoadPackages(false, forceReload);
-    await this.LoadProjectsPackages(forceReload);
+    await this.LoadProjects(forceReload);
   }
 
   async LoadPackages(append: boolean = false, forceReload: boolean = false) {
@@ -647,14 +647,14 @@ export class PackagesView extends FASTElement {
     }
   }
 
-  async LoadProjects() {
+  async LoadProjects(forceReload: boolean = false) {
     this.projects = [];
     let result = await this.mediator.PublishAsync<
       GetProjectsRequest,
       GetProjectsResponse
-    >(GET_PROJECTS, {});
+    >(GET_PROJECTS, { ForceReload: forceReload });
 
     this.projects = result.Projects.map((x) => new ProjectViewModel(x));
-    await this.LoadProjectsPackages();
+    await this.LoadProjectsPackages(forceReload);
   }
 }

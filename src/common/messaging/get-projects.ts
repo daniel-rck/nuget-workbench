@@ -1,4 +1,6 @@
-type GetProjectsRequest = {};
+type GetProjectsRequest = {
+  ForceReload?: boolean;
+};
 
 type GetProjectsResponse = {
   Projects: Array<Project>;
