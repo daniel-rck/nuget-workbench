@@ -101,6 +101,11 @@
           "type": "boolean",
           "default": false,
           "description": "Show inline information about newer package versions in project files"
+        },
+        "NugetGallery.statusBarLoadingIndicator": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show a loading indicator in the status bar when loading packages"
         }
       }
     }

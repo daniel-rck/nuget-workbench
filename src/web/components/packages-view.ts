@@ -17,7 +17,12 @@ import {
   GET_PACKAGE,
   GET_PACKAGES,
   GET_PROJECTS,
+  UPDATE_STATUS_BAR,
 } from "@/common/messaging/core/commands";
+import {
+  UpdateStatusBarRequest,
+  UpdateStatusBarResponse,
+} from "@/common/messaging/update-status-bar";
 import codicon from "@/web/styles/codicon.css";
 import { scrollableBase } from "@/web/styles/base.css";
 import { PackageViewModel, ProjectViewModel } from "../types";
@@ -27,9 +32,12 @@ const template = html<PackagesView>`
   <div class="container">
     <div class="col" id="packages">
       <search-bar
-        @reload-invoked=${(x, e) => x.ReloadInvoked((e.event as CustomEvent<boolean>).detail)}
-        @filter-changed=${(x, e) =>
-          x.UpdatePackagesFilters((e.event as CustomEvent<FilterEvent>).detail)}
+        @reload-invoked=${async (x, e) =>
+          await x.ReloadInvoked((e.event as CustomEvent<boolean>).detail)}
+        @filter-changed=${async (x, e) =>
+          await x.UpdatePackagesFilters(
+            (e.event as CustomEvent<FilterEvent>).detail
+          )}
       ></search-bar>
       <vscode-panels class="tabs" aria-label="Default">
         <vscode-panel-tab class="tab" id="tab-1">BROWSE</vscode-panel-tab>
@@ -37,8 +45,8 @@ const template = html<PackagesView>`
         <vscode-panel-view class="views" id="view-1">
           <div
             class="packages-container"
-            @scroll=${(x, e) =>
-              x.PackagesScrollEvent(e.event.target as HTMLElement)}
+            @scroll=${async (x, e) =>
+              await x.PackagesScrollEvent(e.event.target as HTMLElement)}
           >
             ${when(
               (x) => !x.packagesLoadingError,
@@ -469,25 +477,52 @@ export class PackagesView extends FASTElement {
         )
     );
 
-    if (forceReload) {
-      for (let i = 0; i < this.projectsPackages.length; i++) {
-        await this.UpdatePackage(this.projectsPackages[i], forceReload);
-      }
-    } else {
-      for (let i = 0; i < this.projectsPackages.length; i++) {
-        this.UpdatePackage(this.projectsPackages[i], forceReload);
+    const total = this.projectsPackages.length;
+    let completed = 0;
+
+    if (total > 0) {
+      await this.mediator.PublishAsync<
+        UpdateStatusBarRequest,
+        UpdateStatusBarResponse
+      >(UPDATE_STATUS_BAR, {
+        Percentage: 0,
+        Message: "Loading installed packages...",
+      });
+    }
+    
+    try {
+      const promises = this.projectsPackages.map(async (pkg) => {
+        await this.UpdatePackage(pkg, forceReload);
+        completed++;
+        await this.mediator.PublishAsync<
+          UpdateStatusBarRequest,
+          UpdateStatusBarResponse
+        >(UPDATE_STATUS_BAR, {
+          Percentage: (completed / total) * 100,
+          Message: "Loading installed packages...",
+        });
+      });
+      await Promise.all(promises);
+    } finally {
+      if (total > 0) {
+        await this.mediator.PublishAsync<
+          UpdateStatusBarRequest,
+          UpdateStatusBarResponse
+        >(UPDATE_STATUS_BAR, {
+          Percentage: null,
+        });
       }
     }
   }
 
-  OnProjectUpdated(event: CustomEvent) {
+  async OnProjectUpdated(event: CustomEvent) {
     const isCpmEnabled = event.detail?.isCpmEnabled ?? false;
     if (isCpmEnabled) {
       // When CPM is enabled, reload all projects as the update affects all of them
-      this.LoadProjects();
+      await this.LoadProjects();
     } else {
       // For non-CPM projects, just refresh the packages list
-      this.LoadProjectsPackages();
+      await this.LoadProjectsPackages();
     }
   }
 
@@ -513,11 +548,11 @@ export class PackagesView extends FASTElement {
     }
   }
 
-  UpdatePackagesFilters(filters: FilterEvent) {
+  async UpdatePackagesFilters(filters: FilterEvent) {
     const forceReload = this.filters.Prerelease !== filters.Prerelease;
     this.filters = filters;
-    this.LoadPackages(false, forceReload);
-    this.LoadProjectsPackages(forceReload);
+    await this.LoadPackages(false, forceReload);
+    await this.LoadProjectsPackages(forceReload);
   }
 
   async SelectPackage(selectedPackage: PackageViewModel) {
@@ -553,18 +588,18 @@ export class PackagesView extends FASTElement {
     this.selectedVersion = this.selectedPackage.Version;
   }
 
-  PackagesScrollEvent(target: HTMLElement) {
+  async PackagesScrollEvent(target: HTMLElement) {
     if (this.packagesLoadingInProgress || this.noMorePackages) return;
     if (
       target.scrollTop + target.getBoundingClientRect().height >
       target.scrollHeight - PACKAGE_CONTAINER_SCROLL_MARGIN
     )
-      this.LoadPackages(true);
+    await this.LoadPackages(true);
   }
 
-  ReloadInvoked(forceReload: boolean = false) {
-    this.LoadPackages(false, forceReload);
-    this.LoadProjectsPackages(forceReload);
+  async ReloadInvoked(forceReload: boolean = false) {
+    await this.LoadPackages(false, forceReload);
+    await this.LoadProjectsPackages(forceReload);
   }
 
   async LoadPackages(append: boolean = false, forceReload: boolean = false) {

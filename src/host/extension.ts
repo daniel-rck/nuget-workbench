@@ -14,6 +14,7 @@ import {
   SHOW_SETTINGS,
   UPDATE_CONFIGURATION,
   UPDATE_PROJECT,
+  UPDATE_STATUS_BAR,
 } from "@/common/messaging/core/commands";
 import { GetProjects } from "./handlers/get-projects";
 import { GetPackages } from "./handlers/get-packages";
@@ -23,6 +24,7 @@ import UpdateConfiguration from "./handlers/update-configuration";
 import OpenUrl from "./handlers/open-url";
 import { GetPackageDetails } from "./handlers/get-package-details";
 import { GetPackage } from "./handlers/get-package";
+import { UpdateStatusBar } from "./handlers/update-status-bar";
 import { Logger } from "../common/logger";
 import { PackageVersionDecorator } from "./utilities/package-version-decorator";
 
@@ -83,7 +85,8 @@ class NugetViewProvider implements vscode.WebviewViewProvider {
       .AddHandler(GET_CONFIGURATION, new GetConfiguration())
       .AddHandler(UPDATE_CONFIGURATION, new UpdateConfiguration())
       .AddHandler(GET_PACKAGE_DETAILS, new GetPackageDetails())
-      .AddHandler(OPEN_URL, new OpenUrl());
+      .AddHandler(OPEN_URL, new OpenUrl())
+      .AddHandler(UPDATE_STATUS_BAR, new UpdateStatusBar());
 
     const webJsSrc = webviewView.webview.asWebviewUri(
       vscode.Uri.joinPath(this._extensionUri, ...["dist", "web.js"])

@@ -239,6 +239,7 @@ export class SettingsView extends FASTElement {
           SkipRestore: this.skipRestore,
           EnablePackageVersionInlineInfo: this.enablePackageVersionInlineInfo,
           Sources: this.sources.map((x) => x.GetModel()),
+          StatusBarLoadingIndicator: this.configuration.Configuration?.StatusBarLoadingIndicator ?? false,
         },
       }
     );

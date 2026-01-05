@@ -54,6 +54,7 @@ type Configuration = {
   SkipRestore: boolean;
   EnablePackageVersionInlineInfo: boolean;
   Sources: Array<Source>;
+  StatusBarLoadingIndicator: boolean;
 };
 
 type HttpError = {
