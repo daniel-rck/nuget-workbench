@@ -130,7 +130,7 @@ export class PackageVersionDecorator implements vscode.Disposable {
 
         // Fetch and decorate
         if (packagesToFetch.size > 0) {
-            this.fetchAndDecorate(packagesToFetch, packagePositions, editor);
+            await this.fetchAndDecorate(packagesToFetch, packagePositions, editor);
         }
     }
 

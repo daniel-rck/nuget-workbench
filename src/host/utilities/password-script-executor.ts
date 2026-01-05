@@ -14,7 +14,8 @@ class PasswordScriptTerminal implements vscode.Pseudoterminal {
   
   constructor(
     private scriptPath: string,
-    private encodedPassword: string
+    private encodedPassword: string,
+    private spawnFn: typeof spawn = spawn
   ) {}
 
   open(initialDimensions: vscode.TerminalDimensions | undefined): void {
@@ -40,7 +41,7 @@ class PasswordScriptTerminal implements vscode.Pseudoterminal {
       args = [this.encodedPassword];
     }
 
-    const proc = spawn(command, args, {
+    const proc = this.spawnFn(command, args, {
       cwd: process.cwd(),
       env: process.env,
     });
@@ -83,6 +84,11 @@ export default class PasswordScriptExecutor {
   private static cache: Map<string, { password: string; timestamp: number }> = new Map();
   private static readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
+  // START: Test Hook
+  // Exposed for testing purposes to mock child_process.spawn
+  public static _spawn = spawn;
+  // END: Test Hook
+
   static async ExecuteScript(scriptPath: string, encodedPassword: string): Promise<string> {
     if (!encodedPassword || encodedPassword.trim() === '') {
       throw new Error('Encoded password is empty or undefined');
@@ -96,7 +102,7 @@ export default class PasswordScriptExecutor {
     }
 
     try {
-      const pty = new PasswordScriptTerminal(scriptPath, encodedPassword);
+      const pty = new PasswordScriptTerminal(scriptPath, encodedPassword, this._spawn);
       
       const terminal = vscode.window.createTerminal({
         name: 'NuGet Password Script',
