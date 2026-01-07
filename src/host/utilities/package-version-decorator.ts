@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
-import nugetApiFactory from '../nuget/api-factory';
-import NuGetConfigResolver from '../utilities/nuget-config-resolver';
 import { Logger } from '../../common/logger';
+import { GetPackage } from '../handlers/get-package';
 
 export class PackageVersionDecorator implements vscode.Disposable {
     private _disposables: vscode.Disposable[] = [];
@@ -140,39 +139,22 @@ export class PackageVersionDecorator implements vscode.Disposable {
         editor: vscode.TextEditor
     ) {
         Logger.debug(`PackageVersionDecorator.fetchAndDecorate: Fetching versions for ${Array.from(packageIds).join(', ')}`);
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        const sources = await NuGetConfigResolver.GetSourcesAndDecodePasswords(workspaceRoot);
         const decorations: vscode.DecorationOptions[] = [];
 
-        if (sources.length === 0) {
-            Logger.warn('PackageVersionDecorator.fetchAndDecorate: No NuGet sources configured.');
-            return;
-        }
+        const getPackageHandler = new GetPackage();
 
         const promises = Array.from(packageIds).map(async (packageId) => {
              if (this._failedCache.has(packageId)) return;
 
              try {
-                 // Try sources in order until found
-                 let found = false;
-                 let latestVersion: string | undefined;
+                 const result = await getPackageHandler.HandleAsync({
+                     Id: packageId,
+                     Url: '',
+                     Prerelease: true
+                 });
 
-                 for (const source of sources) {
-                     try {
-                         const api = await nugetApiFactory.GetSourceApi(source.Url);
-                         const result = await api.GetPackageAsync(packageId);
-
-                         if (!result.isError && result.data) {
-                             latestVersion = result.data.Version;
-                             found = true;
-                             break;
-                         }
-                     } catch (e) {
-                         // Try next source
-                     }
-                 }
-
-                 if (found && latestVersion) {
+                 if (!result.IsFailure && result.Package) {
+                    const latestVersion = result.Package.Version;
                     const positions = packagePositions.get(packageId);
                     if (positions) {
                         for (const pos of positions) {
