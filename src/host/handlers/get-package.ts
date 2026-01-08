@@ -12,19 +12,14 @@ export class GetPackage implements IRequestHandler<GetPackageRequest, GetPackage
 
       for (const source of sources) {
         try {
-          Logger.info(`GetPackage.HandleAsync: Fetching package ${request.Id} from ${source.Url}`);
-          let api = await nugetApiFactory.GetSourceApi(source.Url);
-          if (request.ForceReload) {
-            api.ClearPackageCache(request.Id);
-          }
-          let packageResult = await api.GetPackageAsync(request.Id);
+          const packageResult = await this.fetchPackage(source.Url, request.Id, request.ForceReload);
 
           if (!packageResult.isError) {
-             Logger.info(`GetPackage.HandleAsync: Successfully fetched package ${request.Id} from ${source.Url}`);
-             return {
-               IsFailure: false,
-               Package: packageResult.data,
-             };
+            Logger.info(`GetPackage.HandleAsync: Successfully fetched package ${request.Id} from ${source.Url}`);
+            return {
+              IsFailure: false,
+              Package: packageResult.data,
+            };
           }
         } catch (err) {
           Logger.warn(`GetPackage.HandleAsync: Failed to fetch package ${request.Id} from ${source.Url}. Trying next source.`);
@@ -39,13 +34,8 @@ export class GetPackage implements IRequestHandler<GetPackageRequest, GetPackage
       };
     }
 
-    Logger.info(`GetPackage.HandleAsync: Fetching package ${request.Id} from ${request.Url}`);
-    let api = await nugetApiFactory.GetSourceApi(request.Url);
     try {
-      if (request.ForceReload) {
-        api.ClearPackageCache(request.Id);
-      }
-      let packageResult = await api.GetPackageAsync(request.Id);
+      const packageResult = await this.fetchPackage(request.Url, request.Id, request.ForceReload);
 
       if (packageResult.isError) {
         Logger.error(`GetPackage.HandleAsync: Failed to fetch package ${request.Id} from ${request.Url}`);
@@ -73,5 +63,14 @@ export class GetPackage implements IRequestHandler<GetPackageRequest, GetPackage
       };
       return result;
     }
+  }
+
+  private async fetchPackage(sourceUrl: string, packageId: string, forceReload: boolean = false) {
+    Logger.info(`GetPackage.HandleAsync: Fetching package ${packageId} from ${sourceUrl}`);
+    let api = await nugetApiFactory.GetSourceApi(sourceUrl);
+    if (forceReload) {
+      api.ClearPackageCache(packageId);
+    }
+    return await api.GetPackageAsync(packageId);
   }
 }
