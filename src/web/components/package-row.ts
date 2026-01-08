@@ -12,13 +12,14 @@ import { PackageViewModel } from "../types";
 import codicon from "@/web/styles/codicon.css";
 
 const template = html<PackageRow>`
+${when((x) => x.package, html<PackageRow>`
 <div class="package-row ${(x) =>
   x.package.Selected ? "package-row-selected" : ""} ${(x) =>
   x.package.Status === "Error" ? "package-row-error" : ""}">
     <div class="package-title">
     <img class="icon" src=${(x) => x.IconUrl} @error="${(x) =>
   (x.iconUrl =
-    "https://nuget.org/Content/gallery/img/default-package-icon.svg")}"></img> 
+    "https://nuget.org/Content/gallery/img/default-package-icon.svg")}" />
     <div class="title">
     <span class="name">${(x) => x.package.Name}</span>
     ${when(
@@ -59,6 +60,7 @@ const template = html<PackageRow>`
     )}
     </div>
 </div>
+`)}
 `;
 const styles = css`
   .package-row {
@@ -129,14 +131,14 @@ const styles = css`
 })
 export class PackageRow extends FASTElement {
   @attr showInstalledVersion!: boolean;
-  @attr package!: PackageViewModel;
+  @observable package!: PackageViewModel;
   @observable iconUrl: string | null = null;
 
   @volatile
   get IconUrl() {
-    if (!this.package.IconUrl)
+    if (!this.package?.IconUrl)
       this.iconUrl =
         "https://nuget.org/Content/gallery/img/default-package-icon.svg";
-    return this.iconUrl ?? this.package.IconUrl;
+    return this.iconUrl ?? this.package?.IconUrl;
   }
 }
