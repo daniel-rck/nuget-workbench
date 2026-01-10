@@ -37,6 +37,11 @@ jobs:
 
       - name: Run Tests
         run: |
+          rm -rf out
           npm run test-compile
+          echo "=== Discovering test files ==="
+          find out -name "*.test.js" | wc -l
+          find out -name "*.test.js"
+          echo "=== Running tests ==="
           xvfb-run -a npm test
         if: runner.os == 'Linux'
