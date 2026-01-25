@@ -5,7 +5,7 @@ All notable changes to the "vscode-nuget-gallery" extension will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0]
 
 ### Added
 
@@ -24,8 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cached credentials to minimize script executions (5-minute TTL)
   - Source-level password script configuration through VS Code settings
 - Status bar loading indicator (configurable via `NugetGallery.statusBarLoadingIndicator`)
+- Package update status shown in status bar
 - Configurable logging level (configurable via `NugetGallery.logLevel`)
 - Visual indication of failed package fetches in the package list
+- Display "Multiple" text for packages with mixed versions across projects
 
 ### Changed
 
@@ -39,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed project reload issue
+- Fixed installed packages not loading for projects with XML namespaces
+- Fixed cache not clearing when toggling Prerelease option
 
 ### Removed
 
