@@ -68,7 +68,7 @@ suite('GetPackage Handler Tests', () => {
             assert.deepStrictEqual(result.Package, mockPackage);
             assert.strictEqual(result.SourceUrl, request.Url);
             assert.ok(getSourceApiStub.calledWith(request.Url));
-            assert.ok(mockApi.GetPackageAsync.calledWith('TestPackage'));
+            assert.ok(mockApi.GetPackageAsync.calledWith('TestPackage', false));
         });
 
         test('should return error when API call returns error', async () => {
@@ -157,7 +157,7 @@ suite('GetPackage Handler Tests', () => {
             assert.strictEqual(result.IsFailure, false);
             assert.deepStrictEqual(result.Package, mockPackage);
             assert.strictEqual(result.SourceUrl, 'https://source1.com');
-            assert.ok(mockApi1.GetPackageAsync.calledWith('TestPackage'));
+            assert.ok(mockApi1.GetPackageAsync.calledWith('TestPackage', false));
         });
 
         test('should fail over to next source if first fails', async () => {

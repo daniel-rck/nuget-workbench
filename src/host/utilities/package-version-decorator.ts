@@ -7,6 +7,7 @@ export class PackageVersionDecorator implements vscode.Disposable {
     private _decorationType: vscode.TextEditorDecorationType;
     private _failedCache: Set<string> = new Set(); // PackageIds that failed to fetch
     private _isEnabled: boolean = false;
+    private _prerelease: boolean = false;
 
     constructor() {
         Logger.debug('PackageVersionDecorator.constructor: Initialized');
@@ -21,7 +22,8 @@ export class PackageVersionDecorator implements vscode.Disposable {
 
         // Listen for configuration changes
         this._disposables.push(vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration('NugetGallery.enablePackageVersionInlineInfo')) {
+            if (e.affectsConfiguration('NugetGallery.enablePackageVersionInlineInfo') || 
+                e.affectsConfiguration('NugetGallery.prerelease')) {
                 this.updateConfiguration();
                 if (vscode.window.activeTextEditor) {
                     this.triggerUpdateDecorations(vscode.window.activeTextEditor);
@@ -50,8 +52,10 @@ export class PackageVersionDecorator implements vscode.Disposable {
     }
 
     private updateConfiguration() {
-        this._isEnabled = vscode.workspace.getConfiguration('NugetGallery').get<boolean>('enablePackageVersionInlineInfo', false);
-        Logger.debug(`PackageVersionDecorator.updateConfiguration: Configuration updated, enabled=${this._isEnabled}`);
+        const config = vscode.workspace.getConfiguration('NugetGallery');
+        this._isEnabled = config.get<boolean>('enablePackageVersionInlineInfo', false);
+        this._prerelease = config.get<boolean>('prerelease', false);
+        Logger.debug(`PackageVersionDecorator.updateConfiguration: Configuration updated, enabled=${this._isEnabled}, prerelease=${this._prerelease}`);
     }
 
     private _timeout: NodeJS.Timeout | undefined = undefined;
@@ -157,7 +161,7 @@ export class PackageVersionDecorator implements vscode.Disposable {
                  const result = await getPackageHandler.HandleAsync({
                      Id: packageId,
                      Url: '',
-                     Prerelease: true
+                     Prerelease: this._prerelease
                  });
 
                  if (!result.IsFailure && result.Package) {

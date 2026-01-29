@@ -83,15 +83,15 @@ export default class NuGetApi {
     };
   }
 
-  async GetPackageAsync(id: string): Promise<GetPackageResponse> {
-    const cacheKey = id.toLowerCase();
+  async GetPackageAsync(id: string, prerelease: boolean = true): Promise<GetPackageResponse> {
+    const cacheKey = `${id.toLowerCase()}_${prerelease}`;
     const cached = this._packageCache.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp < this._cacheTtl)) {
-      Logger.debug(`NuGetApi.GetPackageAsync: Returning cached package info for ${id}`);
+      Logger.debug(`NuGetApi.GetPackageAsync: Returning cached package info for ${id} (prerelease: ${prerelease})`);
       return { data: cached.data, isError: false, errorMessage: undefined };
     }
 
-    Logger.debug(`NuGetApi.GetPackageAsync: Fetching package info for ${id}`);
+    Logger.debug(`NuGetApi.GetPackageAsync: Fetching package info for ${id} (prerelease: ${prerelease})`);
     await this.EnsureSearchUrl();
     let url = new URL([id.toLowerCase(), "index.json"].join("/"), this._packageInfoUrl).href;
     let items: Array<any> = [];
@@ -124,7 +124,20 @@ export default class NuGetApi {
     }
 
     if (items.length <= 0) throw { message: "Package info couldn't be found for url:" + url };
-    let item = items[items.length - 1];
+    
+    // Filter versions based on prerelease flag
+    // Prerelease versions contain a hyphen (e.g., 1.0.0-beta)
+    const filteredItems = prerelease 
+      ? items 
+      : items.filter((v: any) => !v.catalogEntry?.version?.includes('-'));
+    
+    if (filteredItems.length <= 0) {
+      // If no stable versions found, fall back to all versions
+      Logger.debug(`NuGetApi.GetPackageAsync: No stable versions found for ${id}, returning all versions`);
+    }
+    
+    const itemsToUse = filteredItems.length > 0 ? filteredItems : items;
+    let item = itemsToUse[itemsToUse.length - 1];
     let catalogEntry = item.catalogEntry;
     let packageObject: Package = {
       Id: item["@id"] || "",
@@ -140,7 +153,7 @@ export default class NuGetApi {
       Version: catalogEntry?.version || "",
       InstalledVersion: "",
       Versions:
-        items.map((v: any) => ({
+        itemsToUse.map((v: any) => ({
           Version: v.catalogEntry.version,
           Id: v["@id"],
         })) || [],

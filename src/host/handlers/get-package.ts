@@ -13,7 +13,7 @@ export class GetPackage implements IRequestHandler<GetPackageRequest, GetPackage
 
       for (const source of sources) {
         try {
-          const packageResult = await this.fetchPackage(source.Url, request.Id, request.ForceReload);
+          const packageResult = await this.fetchPackage(source.Url, request.Id, request.Prerelease, request.ForceReload);
 
           if (!packageResult.isError) {
             Logger.info(`GetPackage.HandleAsync: Successfully fetched package ${request.Id} from ${source.Url}`);
@@ -37,7 +37,7 @@ export class GetPackage implements IRequestHandler<GetPackageRequest, GetPackage
     }
 
     try {
-      const packageResult = await this.fetchPackage(request.Url, request.Id, request.ForceReload);
+      const packageResult = await this.fetchPackage(request.Url, request.Id, request.Prerelease, request.ForceReload);
 
       if (packageResult.isError) {
         Logger.error(`GetPackage.HandleAsync: Failed to fetch package ${request.Id} from ${request.Url}`);
@@ -68,12 +68,12 @@ export class GetPackage implements IRequestHandler<GetPackageRequest, GetPackage
     }
   }
 
-  private async fetchPackage(sourceUrl: string, packageId: string, forceReload: boolean = false) {
-    Logger.info(`GetPackage.HandleAsync: Fetching package ${packageId} from ${sourceUrl}`);
+  private async fetchPackage(sourceUrl: string, packageId: string, prerelease: boolean, forceReload: boolean = false) {
+    Logger.info(`GetPackage.HandleAsync: Fetching package ${packageId} from ${sourceUrl} (prerelease: ${prerelease})`);
     let api = await nugetApiFactory.GetSourceApi(sourceUrl);
     if (forceReload) {
       api.ClearPackageCache(packageId);
     }
-    return await api.GetPackageAsync(packageId);
+    return await api.GetPackageAsync(packageId, prerelease);
   }
 }

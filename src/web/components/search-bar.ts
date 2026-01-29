@@ -1,8 +1,10 @@
 import { FASTElement, css, customElement, html, observable, repeat } from "@microsoft/fast-element";
 
 import codicon from "@/web/styles/codicon.css";
-import { Configuration } from "../registrations";
+import { Configuration, IMediator } from "../registrations";
 import lodash from "lodash";
+import { UPDATE_CONFIGURATION } from "@/common/messaging/core/commands";
+import { UpdateConfigurationRequest, UpdateConfigurationResponse } from "@/common/messaging/update-configuration";
 
 const template = html<SearchBar>`
   <div class="search-bar">
@@ -73,20 +75,44 @@ export type FilterEvent = {
 })
 export class SearchBar extends FASTElement {
   @Configuration configuration!: Configuration;
+  @IMediator mediator!: IMediator;
   delayedPackagesLoader = lodash.debounce(() => this.EmitFilterChangedEvent(), 500);
-  @observable prerelase: boolean = true;
+  @observable prerelase: boolean = false;
   @observable filterQuery: string = "";
   @observable selectedSourceUrl: string = "";
 
   connectedCallback(): void {
     super.connectedCallback();
     this.selectedSourceUrl = "";
+    // Load prerelease from configuration
+    this.prerelase = this.configuration.Configuration?.Prerelease ?? false;
     this.EmitFilterChangedEvent();
   }
 
-  PrerelaseChangedEvent(target: EventTarget) {
+  async PrerelaseChangedEvent(target: EventTarget) {
     this.prerelase = (target as HTMLInputElement).checked;
+    // Save to configuration
+    await this.SavePrereleaseToConfiguration();
     this.EmitFilterChangedEvent();
+  }
+
+  private async SavePrereleaseToConfiguration() {
+    const config = this.configuration.Configuration;
+    if (!config) return;
+
+    await this.mediator.PublishAsync<UpdateConfigurationRequest, UpdateConfigurationResponse>(
+      UPDATE_CONFIGURATION,
+      {
+        Configuration: {
+          SkipRestore: config.SkipRestore,
+          EnablePackageVersionInlineInfo: config.EnablePackageVersionInlineInfo,
+          Prerelease: this.prerelase,
+          Sources: config.Sources,
+          StatusBarLoadingIndicator: config.StatusBarLoadingIndicator,
+        },
+      }
+    );
+    await this.configuration.Reload();
   }
 
   FilterInputEvent(target: EventTarget) {

@@ -103,6 +103,11 @@
           "default": false,
           "description": "Show inline information about newer package versions in project files"
         },
+        "NugetGallery.prerelease": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include prerelease versions when checking for package updates"
+        },
         "NugetGallery.statusBarLoadingIndicator": {
           "type": "boolean",
           "default": false,

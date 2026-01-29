@@ -54,6 +54,7 @@ type Source = {
 type Configuration = {
   SkipRestore: boolean;
   EnablePackageVersionInlineInfo: boolean;
+  Prerelease: boolean;
   Sources: Array<Source>;
   StatusBarLoadingIndicator: boolean;
 };

@@ -15,10 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Update icon is hidden for pinned packages in the project list
   - In the installed packages tab, update icon shows only if at least one project allows updates (is not pinned)
   - Version ranges like `[1.0,2.0]`, `(1.0,)`, `[1.0,)` are NOT considered pinned and will show updates normally
+- Configuration setting `NugetGallery.prerelease` to control whether prerelease versions are included when checking for package updates
 
 ### Fixed
 
 - Fixed password script executing multiple times when fetching packages from sources with password script authentication. The script now executes only once and concurrent requests share the result.
+- Fixed prerelease checkbox state not being persisted across sessions
+- Fixed inline package version decorator always fetching prerelease versions regardless of the prerelease checkbox setting
+- Fixed prerelease setting synchronization between UI and configuration
 
 ## [2.0.0]
 

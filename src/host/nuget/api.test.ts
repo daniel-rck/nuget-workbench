@@ -269,6 +269,157 @@ suite('NuGetApi Tests', () => {
             assert.strictEqual(result.data?.Name, 'PagedPackage');
             assert.strictEqual(httpStub.callCount, 3);
         });
+
+        test('should filter prerelease versions when prerelease is false', async () => {
+            const api = new NuGetApi('https://api.nuget.org/v3/index.json');
+            
+            const mockPackageWithPrereleases = {
+                data: {
+                    count: 1,
+                    items: [
+                        {
+                            items: [
+                                {
+                                    '@id': 'https://api.nuget.org/v3/registration/pkg/1.0.0.json',
+                                    catalogEntry: {
+                                        id: 'TestPackage',
+                                        version: '1.0.0',
+                                        authors: [],
+                                        tags: []
+                                    }
+                                },
+                                {
+                                    '@id': 'https://api.nuget.org/v3/registration/pkg/2.0.0-beta.json',
+                                    catalogEntry: {
+                                        id: 'TestPackage',
+                                        version: '2.0.0-beta',
+                                        authors: [],
+                                        tags: []
+                                    }
+                                },
+                                {
+                                    '@id': 'https://api.nuget.org/v3/registration/pkg/1.1.0.json',
+                                    catalogEntry: {
+                                        id: 'TestPackage',
+                                        version: '1.1.0',
+                                        authors: [],
+                                        tags: []
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            };
+            
+            const httpStub = sandbox.stub((api as any).http, 'get');
+            httpStub.onFirstCall().resolves(mockServiceIndex);
+            httpStub.onSecondCall().resolves(mockPackageWithPrereleases);
+
+            const result = await api.GetPackageAsync('TestPackage', false);
+
+            assert.strictEqual(result.isError, false);
+            // When prerelease=false, 2.0.0-beta should be filtered out
+            // Latest stable version should be 1.1.0
+            assert.strictEqual(result.data?.Version, '1.1.0');
+            assert.strictEqual(result.data?.Versions.length, 2);
+            assert.ok(result.data?.Versions.every(v => !v.Version.includes('-')));
+        });
+
+        test('should include prerelease versions when prerelease is true', async () => {
+            const api = new NuGetApi('https://api.nuget.org/v3/index.json');
+            
+            const mockPackageWithPrereleases = {
+                data: {
+                    count: 1,
+                    items: [
+                        {
+                            items: [
+                                {
+                                    '@id': 'https://api.nuget.org/v3/registration/pkg/1.0.0.json',
+                                    catalogEntry: {
+                                        id: 'TestPackage',
+                                        version: '1.0.0',
+                                        authors: [],
+                                        tags: []
+                                    }
+                                },
+                                {
+                                    '@id': 'https://api.nuget.org/v3/registration/pkg/2.0.0-beta.json',
+                                    catalogEntry: {
+                                        id: 'TestPackage',
+                                        version: '2.0.0-beta',
+                                        authors: [],
+                                        tags: []
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            };
+            
+            const httpStub = sandbox.stub((api as any).http, 'get');
+            httpStub.onFirstCall().resolves(mockServiceIndex);
+            httpStub.onSecondCall().resolves(mockPackageWithPrereleases);
+
+            const result = await api.GetPackageAsync('TestPackage', true);
+
+            assert.strictEqual(result.isError, false);
+            // When prerelease=true, all versions should be included
+            assert.strictEqual(result.data?.Version, '2.0.0-beta');
+            assert.strictEqual(result.data?.Versions.length, 2);
+        });
+
+        test('should use separate cache entries for prerelease true and false', async () => {
+            const api = new NuGetApi('https://api.nuget.org/v3/index.json');
+            
+            const mockPackageWithPrereleases = {
+                data: {
+                    count: 1,
+                    items: [
+                        {
+                            items: [
+                                {
+                                    '@id': 'https://api.nuget.org/v3/registration/pkg/1.0.0.json',
+                                    catalogEntry: {
+                                        id: 'TestPackage',
+                                        version: '1.0.0',
+                                        authors: [],
+                                        tags: []
+                                    }
+                                },
+                                {
+                                    '@id': 'https://api.nuget.org/v3/registration/pkg/2.0.0-beta.json',
+                                    catalogEntry: {
+                                        id: 'TestPackage',
+                                        version: '2.0.0-beta',
+                                        authors: [],
+                                        tags: []
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            };
+            
+            const httpStub = sandbox.stub((api as any).http, 'get');
+            httpStub.onFirstCall().resolves(mockServiceIndex);
+            httpStub.onSecondCall().resolves(mockPackageWithPrereleases);
+            httpStub.onThirdCall().resolves(mockPackageWithPrereleases);
+
+            // First call with prerelease=false
+            const result1 = await api.GetPackageAsync('TestPackage', false);
+            assert.strictEqual(result1.data?.Version, '1.0.0');
+            
+            // Second call with prerelease=true - should make a new request
+            const result2 = await api.GetPackageAsync('TestPackage', true);
+            assert.strictEqual(result2.data?.Version, '2.0.0-beta');
+            
+            // Should have made 3 HTTP calls (index + 2 package fetches for different prerelease settings)
+            assert.strictEqual(httpStub.callCount, 3);
+        });
     });
 
     suite('ClearPackageCache', () => {

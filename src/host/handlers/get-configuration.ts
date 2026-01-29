@@ -47,6 +47,7 @@ export default class GetConfiguration implements IRequestHandler<GetConfiguratio
       Configuration: {
         SkipRestore: config.get("skipRestore") ?? false,
         EnablePackageVersionInlineInfo: config.get("enablePackageVersionInlineInfo") ?? false,
+        Prerelease: config.get("prerelease") ?? false,
         Sources: sources,
         StatusBarLoadingIndicator: config.get("statusBarLoadingIndicator") ?? false,
       },
