@@ -586,6 +586,30 @@ suite('PackagesView Component', () => {
             assert.strictEqual(url, null);
         });
 
+        test('NugetOrgPackageUrl should use selectedPackage.SourceUrl when filters.SourceUrl is empty', () => {
+            packagesView.filters.SourceUrl = ''; // "All" sources selected
+            packagesView.selectedPackage = new PackageViewModel(
+                createMockPackage({ Name: 'Newtonsoft.Json' })
+            );
+            packagesView.selectedPackage.SourceUrl = 'https://api.nuget.org/v3/index.json';
+            packagesView.selectedVersion = '13.0.1';
+
+            const url = packagesView.NugetOrgPackageUrl;
+
+            assert.strictEqual(url, 'https://www.nuget.org/packages/Newtonsoft.Json/13.0.1');
+        });
+
+        test('NugetOrgPackageUrl should return null when package is from non-nuget.org source with empty filter', () => {
+            packagesView.filters.SourceUrl = ''; // "All" sources selected
+            packagesView.selectedPackage = new PackageViewModel(createMockPackage());
+            packagesView.selectedPackage.SourceUrl = 'https://private.nuget.org/v3/index.json';
+            packagesView.selectedVersion = '1.0.0';
+
+            const url = packagesView.NugetOrgPackageUrl;
+
+            assert.strictEqual(url, null);
+        });
+
         test('PackageVersionUrl should return version URL', () => {
             const pkg = new PackageViewModel(createMockPackage({
                 Version: '1.0.0',

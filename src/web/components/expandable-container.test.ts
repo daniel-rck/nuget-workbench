@@ -17,8 +17,22 @@ suite('ExpandableContainer Component', () => {
 
     test('should initialize with default values', () => {
         assert.strictEqual(container.isExpanded, false);
+        assert.strictEqual(container.expanded, false);
         assert.strictEqual(container.title, "");
         assert.strictEqual(container.summary, "");
+    });
+
+    test('should initialize expanded when expanded attribute is set', async () => {
+        const expandedContainer = new ExpandableContainer();
+        expandedContainer.setAttribute('expanded', '');
+        document.body.appendChild(expandedContainer);
+
+        await DOM.nextUpdate();
+
+        assert.strictEqual(expandedContainer.expanded, true);
+        assert.strictEqual(expandedContainer.isExpanded, true);
+
+        document.body.removeChild(expandedContainer);
     });
 
     test('should update title and summary from attributes', async () => {

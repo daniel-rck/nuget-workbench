@@ -7,16 +7,27 @@ import { DOM } from '@microsoft/fast-element';
 suite('SearchBar Component', () => {
     let searchBar: SearchBar;
     let mockConfiguration: any;
+    let mockMediator: any;
 
     setup(() => {
         // Mock Configuration
         mockConfiguration = {
             Configuration: {
+                Prerelease: true,
+                SkipRestore: false,
+                EnablePackageVersionInlineInfo: false,
+                StatusBarLoadingIndicator: false,
                 Sources: [
                     { Name: 'NuGet.org', Url: 'https://api.nuget.org/v3/index.json' },
                     { Name: 'Local', Url: 'C:/LocalSource' }
                 ]
-            }
+            },
+            Reload: async () => Promise.resolve()
+        };
+
+        // Mock Mediator
+        mockMediator = {
+            PublishAsync: async () => Promise.resolve({})
         };
 
         // Create instance
@@ -33,6 +44,11 @@ suite('SearchBar Component', () => {
 
         Object.defineProperty(searchBar, 'configuration', {
             value: mockConfiguration,
+            writable: true
+        });
+
+        Object.defineProperty(searchBar, 'mediator', {
+            value: mockMediator,
             writable: true
         });
 
@@ -57,6 +73,10 @@ suite('SearchBar Component', () => {
         const el = new SearchBar();
         Object.defineProperty(el, 'configuration', {
             value: mockConfiguration,
+            writable: true
+        });
+        Object.defineProperty(el, 'mediator', {
+            value: mockMediator,
             writable: true
         });
 

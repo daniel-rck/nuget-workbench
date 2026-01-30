@@ -537,6 +537,94 @@ suite('NuGetApi Tests', () => {
             assert.strictEqual(result.data.dependencies.frameworks['net7.0'].length, 1);
         });
 
+        test('should use embedded catalogEntry when dependencyGroups is present', async () => {
+            const api = new NuGetApi('https://api.nuget.org/v3/index.json');
+            
+            const httpStub = sandbox.stub((api as any).http, 'get');
+            httpStub.onFirstCall().resolves(mockServiceIndex);
+            // catalogEntry is an embedded object with dependencyGroups - no need to fetch catalog
+            httpStub.onSecondCall().resolves({
+                data: {
+                    catalogEntry: {
+                        '@id': 'https://api.nuget.org/catalog/entry',
+                        id: 'TestPackage',
+                        version: '1.0.0',
+                        dependencyGroups: [
+                            {
+                                targetFramework: 'net8.0',
+                                dependencies: [
+                                    { id: 'EmbeddedDep', range: '[1.0.0, )' }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            });
+
+            const result = await api.GetPackageDetailsAsync('https://api.nuget.org/v3/registration/pkg/1.0.0.json');
+
+            // Should only make 2 calls (service index + package version), NOT 3
+            assert.strictEqual(httpStub.callCount, 2);
+            assert.ok(result.data.dependencies);
+            assert.strictEqual(Object.keys(result.data.dependencies.frameworks).length, 1);
+            assert.strictEqual(result.data.dependencies.frameworks['net8.0'].length, 1);
+            assert.strictEqual(result.data.dependencies.frameworks['net8.0'][0].package, 'EmbeddedDep');
+        });
+
+        test('should handle catalogEntry object with @id but no dependencyGroups', async () => {
+            const api = new NuGetApi('https://api.nuget.org/v3/index.json');
+            
+            const httpStub = sandbox.stub((api as any).http, 'get');
+            httpStub.onFirstCall().resolves(mockServiceIndex);
+            // catalogEntry is an object with @id but no dependencyGroups - need to fetch
+            httpStub.onSecondCall().resolves({
+                data: {
+                    catalogEntry: {
+                        '@id': 'https://api.nuget.org/catalog/entry'
+                    }
+                }
+            });
+            httpStub.onThirdCall().resolves({
+                data: {
+                    dependencyGroups: [
+                        {
+                            targetFramework: 'net6.0',
+                            dependencies: [
+                                { id: 'FetchedDep', range: '[2.0.0, )' }
+                            ]
+                        }
+                    ]
+                }
+            });
+
+            const result = await api.GetPackageDetailsAsync('https://api.nuget.org/v3/registration/pkg/1.0.0.json');
+
+            // Should make 3 calls (service index + package version + catalog)
+            assert.strictEqual(httpStub.callCount, 3);
+            assert.strictEqual(result.data.dependencies.frameworks['net6.0'][0].package, 'FetchedDep');
+        });
+
+        test('should return empty dependencies when catalogEntry object has no @id and no dependencyGroups', async () => {
+            const api = new NuGetApi('https://api.nuget.org/v3/index.json');
+            
+            const httpStub = sandbox.stub((api as any).http, 'get');
+            httpStub.onFirstCall().resolves(mockServiceIndex);
+            // catalogEntry is an object but with no valid URL and no dependencyGroups
+            httpStub.onSecondCall().resolves({
+                data: {
+                    catalogEntry: {
+                        id: 'TestPackage',
+                        version: '1.0.0'
+                        // No @id and no dependencyGroups
+                    }
+                }
+            });
+
+            const result = await api.GetPackageDetailsAsync('https://api.nuget.org/v3/registration/pkg/1.0.0.json');
+
+            assert.deepStrictEqual(result.data.dependencies.frameworks, {});
+        });
+
         test('should throw on error and log', async () => {
             const api = new NuGetApi('https://api.nuget.org/v3/index.json');
             

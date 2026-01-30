@@ -144,7 +144,7 @@ const template = html<PackagesView>`
                 <package-details
                   :package=${(x) => x.selectedPackage}
                   :packageVersionUrl=${(x) => x.PackageVersionUrl}
-                  :source=${(x) => x.filters.SourceUrl}
+                  :source=${(x) => x.selectedPackage?.SourceUrl || x.filters.SourceUrl}
                   :passwordScriptPath=${(x) => x.CurrentSource?.PasswordScriptPath}
                 ></package-details>
                 <div class="separator"></div>
@@ -413,7 +413,8 @@ export class PackagesView extends FASTElement {
 
   @volatile
   get NugetOrgPackageUrl() {
-    if (this.filters.SourceUrl.startsWith(NUGET_ORG_PREFIX))
+    const sourceUrl = this.selectedPackage?.SourceUrl || this.filters.SourceUrl;
+    if (sourceUrl.startsWith(NUGET_ORG_PREFIX))
       return `https://www.nuget.org/packages/${this.selectedPackage?.Name}/${this.selectedVersion}`;
     else return null;
   }

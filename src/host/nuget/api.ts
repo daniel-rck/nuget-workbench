@@ -176,8 +176,11 @@ export default class NuGetApi {
   async GetPackageDetailsAsync(packageVersionUrl: string): Promise<GetPackageDetailsResponse> {
     try {
       await this.EnsureSearchUrl();
+      Logger.debug(`NuGetApi.GetPackageDetailsAsync: Fetching package version from ${packageVersionUrl}`);
       let packageVersion = await this.ExecuteGet(packageVersionUrl);
-      if (!packageVersion.data?.catalogEntry)
+      
+      if (!packageVersion.data?.catalogEntry) {
+        Logger.debug(`NuGetApi.GetPackageDetailsAsync: No catalogEntry found in package version response`);
         return {
           data: {
             dependencies: {
@@ -185,8 +188,34 @@ export default class NuGetApi {
             },
           },
         };
+      }
       
-      let result = await this.ExecuteGet(packageVersion.data.catalogEntry);
+      const catalogEntry = packageVersion.data.catalogEntry;
+      let catalogData: any;
+      
+      // Check if catalogEntry is an embedded object with dependencyGroups (some feeds embed the data)
+      // or if it's a URL/object with @id that needs to be fetched
+      if (typeof catalogEntry === 'object' && catalogEntry.dependencyGroups !== undefined) {
+        // catalogEntry is already an embedded object with dependency data
+        Logger.debug(`NuGetApi.GetPackageDetailsAsync: Using embedded catalogEntry data`);
+        catalogData = catalogEntry;
+      } else {
+        // catalogEntry is a URL string or an object with @id - need to fetch it
+        const catalogUrl = typeof catalogEntry === 'string' ? catalogEntry : catalogEntry['@id'];
+        if (!catalogUrl) {
+          Logger.debug(`NuGetApi.GetPackageDetailsAsync: No valid catalog URL found`);
+          return {
+            data: {
+              dependencies: {
+                frameworks: {},
+              },
+            },
+          };
+        }
+        Logger.debug(`NuGetApi.GetPackageDetailsAsync: Fetching catalog from ${catalogUrl}`);
+        let result = await this.ExecuteGet(catalogUrl);
+        catalogData = result.data;
+      }
 
       let packageDetails: PackageDetails = {
         dependencies: {
@@ -194,7 +223,10 @@ export default class NuGetApi {
         },
       };
 
-      result.data?.dependencyGroups?.forEach((dependencyGroup: any) => {
+      const dependencyGroupCount = catalogData?.dependencyGroups?.length || 0;
+      Logger.debug(`NuGetApi.GetPackageDetailsAsync: Found ${dependencyGroupCount} dependency groups`);
+
+      catalogData?.dependencyGroups?.forEach((dependencyGroup: any) => {
         let targetFramework = dependencyGroup.targetFramework;
         packageDetails.dependencies.frameworks[targetFramework] = [];
         dependencyGroup.dependencies?.forEach((dependency: any) => {
@@ -207,6 +239,7 @@ export default class NuGetApi {
           delete packageDetails.dependencies.frameworks[targetFramework];
       });
 
+      Logger.debug(`NuGetApi.GetPackageDetailsAsync: Returning ${Object.keys(packageDetails.dependencies.frameworks).length} frameworks with dependencies`);
       return { data: packageDetails };
     }
     catch (err) {

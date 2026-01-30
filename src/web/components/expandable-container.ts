@@ -67,5 +67,11 @@ const styles = css`
 export class ExpandableContainer extends FASTElement {
   @attr title: string = "";
   @attr summary: string = "";
+  @attr({ mode: 'boolean' }) expanded: boolean = false;
   @observable isExpanded: boolean = false;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.isExpanded = this.expanded;
+  }
 }

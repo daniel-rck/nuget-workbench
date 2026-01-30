@@ -36,6 +36,7 @@ suite('UpdateConfiguration Handler Tests', () => {
                 SkipRestore: true,
                 EnablePackageVersionInlineInfo: true,
                 StatusBarLoadingIndicator: false,
+                Prerelease: true,
                 Sources: [
                     { Name: 'Source1', Url: 'http://source1.com' },
                     { Name: 'Source2', Url: 'http://source2.com', PasswordScriptPath: '/path/to/script' }
@@ -67,6 +68,7 @@ suite('UpdateConfiguration Handler Tests', () => {
                 SkipRestore: false,
                 EnablePackageVersionInlineInfo: false,
                 StatusBarLoadingIndicator: false,
+                Prerelease: false,
                 Sources: []
             }
         };
@@ -84,6 +86,7 @@ suite('UpdateConfiguration Handler Tests', () => {
                 SkipRestore: true,
                 EnablePackageVersionInlineInfo: false,
                 StatusBarLoadingIndicator: false,
+                Prerelease: false,
                 Sources: [
                     { Name: 'SimpleSource', Url: 'http://simple.com' } // No PasswordScriptPath
                 ]
@@ -116,6 +119,7 @@ suite('UpdateConfiguration Handler Tests', () => {
                 SkipRestore: false,
                 EnablePackageVersionInlineInfo: false,
                 StatusBarLoadingIndicator: false,
+                Prerelease: false,
                 Sources: []
             }
         };

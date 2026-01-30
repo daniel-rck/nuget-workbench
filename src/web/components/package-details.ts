@@ -45,7 +45,7 @@ const template = html<PackageDetailsComponent>`
     </div>
   </expandable-container>
 
-  <expandable-container title="Dependencies">
+  <expandable-container title="Dependencies" expanded>
     ${when(
       (x) => x.packageDetailsLoading,
       html<PackageDetailsComponent>`<vscode-progress-ring class="loader"></vscode-progress-ring>`,
