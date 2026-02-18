@@ -33,8 +33,8 @@ export default class UpdateProject implements IRequestHandler<UpdateProjectReque
     nugetApiFactory.ClearCache();
 
     const cpmVersions = CpmResolver.GetPackageVersions(request.ProjectPath);
-    let updatedProject = ProjectParser.Parse(request.ProjectPath, cpmVersions);
-    let result: UpdateProjectResponse = {
+    const updatedProject = ProjectParser.Parse(request.ProjectPath, cpmVersions);
+    const result: UpdateProjectResponse = {
       Project: updatedProject,
       IsCpmEnabled: isCpmEnabled,
     };

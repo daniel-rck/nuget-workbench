@@ -33,16 +33,20 @@ type PackageDependency = {
   versionRange: string;
 };
 
+type VersionSource = "project" | "central" | "override";
+
 type ProjectPackage = {
   Id: string;
   Version: string;
   IsPinned: boolean;
+  VersionSource: VersionSource;
 };
 
 type Project = {
   Name: string;
   Path: string;
   Packages: Array<ProjectPackage>;
+  CpmEnabled: boolean;
 };
 
 type Source = {
@@ -57,6 +61,25 @@ type Configuration = {
   Prerelease: boolean;
   Sources: Array<Source>;
   StatusBarLoadingIndicator: boolean;
+};
+
+type OutdatedPackage = {
+  Id: string;
+  InstalledVersion: string;
+  LatestVersion: string;
+  Projects: Array<{ Name: string; Path: string; Version: string }>;
+  SourceUrl: string;
+  SourceName: string;
+};
+
+type InconsistentPackage = {
+  Id: string;
+  Versions: Array<{
+    Version: string;
+    Projects: Array<{ Name: string; Path: string }>;
+  }>;
+  LatestInstalledVersion: string;
+  CpmManaged: boolean;
 };
 
 type HttpError = {

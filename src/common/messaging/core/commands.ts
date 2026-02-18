@@ -8,3 +8,7 @@ export const GET_PACKAGE_DETAILS = "GetPackageDetails";
 export const OPEN_URL = "OpenUrl";
 export const GET_PACKAGE = "GetPackage";
 export const UPDATE_STATUS_BAR = "UpdateStatusBar";
+export const GET_OUTDATED_PACKAGES = "GetOutdatedPackages";
+export const BATCH_UPDATE_PACKAGES = "BatchUpdatePackages";
+export const GET_INCONSISTENT_PACKAGES = "GetInconsistentPackages";
+export const CONSOLIDATE_PACKAGES = "ConsolidatePackages";

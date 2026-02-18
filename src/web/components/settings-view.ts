@@ -226,7 +226,7 @@ export class SettingsView extends FASTElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    let config = this.configuration.Configuration;
+    const config = this.configuration.Configuration;
     this.skipRestore = config?.SkipRestore ?? false;
     this.enablePackageVersionInlineInfo = config?.EnablePackageVersionInlineInfo ?? false;
     this.sources = config?.Sources.map((x) => new SourceViewModel(x)) ?? [];

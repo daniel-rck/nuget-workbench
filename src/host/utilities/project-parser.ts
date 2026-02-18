@@ -7,8 +7,8 @@ import { Logger } from "../../common/logger";
 export default class ProjectParser {
   static Parse(projectPath: string, cpmVersions?: Map<string, string> | null): Project {
     Logger.debug(`ProjectParser.Parse: Parsing project: ${projectPath}`);
-    let projectContent = fs.readFileSync(projectPath, "utf8");
-    let document = new DOMParser().parseFromString(projectContent);
+    const projectContent = fs.readFileSync(projectPath, "utf8");
+    const document = new DOMParser().parseFromString(projectContent);
 
     // Check for parsing errors or empty document
     if (!document || !document.documentElement) {
@@ -17,7 +17,7 @@ export default class ProjectParser {
     }
 
     // Handle XML Namespaces
-    let select = xpath.useNamespaces({ "ns": "http://schemas.microsoft.com/developer/msbuild/2003" });
+    const select = xpath.useNamespaces({ "ns": "http://schemas.microsoft.com/developer/msbuild/2003" });
     let packagesReferences: Node[] = [];
 
     // Try selecting with namespace first
@@ -38,14 +38,15 @@ export default class ProjectParser {
          packagesReferences = xpath.select("//*[local-name()='ItemGroup']/*[local-name()='PackageReference']", document) as Node[];
     }
 
-    let project: Project = {
+    const project: Project = {
       Path: projectPath,
       Name: path.basename(projectPath),
-      Packages: Array(),
+      Packages: [],
+      CpmEnabled: false,
     };
 
     (packagesReferences || []).forEach((p: any) => {
-      let versionNode = p.attributes?.getNamedItem("Version");
+      const versionNode = p.attributes?.getNamedItem("Version");
       let version = versionNode ? versionNode.value : undefined;
 
       // Check for child element if attribute is missing
@@ -64,13 +65,31 @@ export default class ProjectParser {
       }
 
       const packageId = p.attributes?.getNamedItem("Include").value;
-      
+
+      // Check for VersionOverride attribute (CPM override at project level)
+      let versionOverride = p.attributes?.getNamedItem("VersionOverride")?.value;
+      if (!versionOverride) {
+        const versionOverrideChild = xpath.select("string(*[local-name()='VersionOverride'])", p);
+        if (versionOverrideChild) {
+          versionOverride = versionOverrideChild.toString() || undefined;
+        }
+      }
+
+      let versionSource: VersionSource = "project";
+
       if (cpmVersions) {
-        let cpmVersion = cpmVersions.get(packageId) || null;    
-        if (cpmVersion) {
-          version = cpmVersion;
+        if (versionOverride) {
+          version = versionOverride;
+          versionSource = "override";
+          Logger.debug(`ProjectParser.Parse: Package ${packageId} uses VersionOverride ${versionOverride} in ${projectPath}`);
         } else {
-          Logger.warn(`ProjectParser.Parse: CPM version not found for package ${packageId} in ${projectPath}`);
+          const cpmVersion = cpmVersions.get(packageId) || null;
+          if (cpmVersion) {
+            version = cpmVersion;
+            versionSource = "central";
+          } else {
+            Logger.warn(`ProjectParser.Parse: CPM version not found for package ${packageId} in ${projectPath}`);
+          }
         }
       }
 
@@ -79,10 +98,11 @@ export default class ProjectParser {
       // Ranges like [1.0,2.0], (1.0,), [1.0,) etc. are NOT pinned
       const isPinned = version ? (version.startsWith('[') && version.endsWith(']') && !version.includes(',')) : false;
 
-      let projectPackage: ProjectPackage = {
+      const projectPackage: ProjectPackage = {
         Id: packageId,
-        Version: version || "", // Ensure string
+        Version: version || "",
         IsPinned: isPinned,
+        VersionSource: versionSource,
       };
       project.Packages.push(projectPackage);
     });

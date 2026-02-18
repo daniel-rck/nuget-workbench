@@ -8,9 +8,9 @@ export default class UpdateConfiguration
 {
   async HandleAsync(request: UpdateConfigurationRequest): Promise<UpdateConfigurationResponse> {
     Logger.info("UpdateConfiguration.HandleAsync: Updating configuration");
-    let config = vscode.workspace.getConfiguration("NugetGallery");
+    const config = vscode.workspace.getConfiguration("NugetGallery");
 
-    let sources = request.Configuration.Sources.map((x) => 
+    const sources = request.Configuration.Sources.map((x) => 
       JSON.stringify({ 
         name: x.Name, 
         url: x.Url,

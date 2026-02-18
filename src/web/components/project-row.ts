@@ -117,12 +117,12 @@ export class ProjectRow extends FASTElement {
 
   @volatile
   get ProjectPackage() {
-    let projectPackage = this.project.Packages.find((x) => x.Id == this.packageId);
+    const projectPackage = this.project.Packages.find((x) => x.Id == this.packageId);
     return projectPackage;
   }
 
   async Update(type: "INSTALL" | "UNINSTALL" | "UPDATE") {
-    let request: UpdateProjectRequest = {
+    const request: UpdateProjectRequest = {
       Type: type,
       ProjectPath: this.project.Path,
       PackageId: this.packageId,
@@ -130,7 +130,7 @@ export class ProjectRow extends FASTElement {
       SourceUrl: this.sourceUrl,
     };
     this.loaders.Add(request.PackageId, true);
-    let result = await this.mediator.PublishAsync<UpdateProjectRequest, UpdateProjectResponse>(
+    const result = await this.mediator.PublishAsync<UpdateProjectRequest, UpdateProjectResponse>(
       UPDATE_PROJECT,
       request
     );

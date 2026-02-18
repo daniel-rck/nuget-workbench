@@ -3,4 +3,4 @@ export type UpdateStatusBarRequest = {
   Message?: string;
 };
 
-export type UpdateStatusBarResponse = {};
+export type UpdateStatusBarResponse = Record<string, never>;

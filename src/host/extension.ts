@@ -15,6 +15,10 @@ import {
   UPDATE_CONFIGURATION,
   UPDATE_PROJECT,
   UPDATE_STATUS_BAR,
+  GET_OUTDATED_PACKAGES,
+  BATCH_UPDATE_PACKAGES,
+  GET_INCONSISTENT_PACKAGES,
+  CONSOLIDATE_PACKAGES,
 } from "@/common/messaging/core/commands";
 import { GetProjects } from "./handlers/get-projects";
 import { GetPackages } from "./handlers/get-packages";
@@ -25,6 +29,10 @@ import OpenUrl from "./handlers/open-url";
 import { GetPackageDetails } from "./handlers/get-package-details";
 import { GetPackage } from "./handlers/get-package";
 import { UpdateStatusBar } from "./handlers/update-status-bar";
+import { GetOutdatedPackages } from "./handlers/get-outdated-packages";
+import { BatchUpdatePackages } from "./handlers/batch-update-packages";
+import { GetInconsistentPackages } from "./handlers/get-inconsistent-packages";
+import { ConsolidatePackages } from "./handlers/consolidate-packages";
 import { Logger } from "../common/logger";
 import { PackageVersionDecorator } from "./utilities/package-version-decorator";
 
@@ -37,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(new PackageVersionDecorator());
 
-  let previousVersion: string | undefined = context.globalState.get("NugetGallery.version");
+  const previousVersion: string | undefined = context.globalState.get("NugetGallery.version");
   context.globalState.update("NugetGallery.version", context.extension.packageJSON.version);
   if (previousVersion == undefined) {
     Logger.info("Extension.activate: Extension installed");
@@ -74,7 +82,7 @@ class NugetViewProvider implements vscode.WebviewViewProvider {
     token: vscode.CancellationToken
   ): void | Thenable<void> {
     Logger.debug("NugetViewProvider.resolveWebviewView: Resolving webview view");
-    let hostBus: IBus = new HostBus(webviewView.webview);
+    const hostBus: IBus = new HostBus(webviewView.webview);
     mediator = new Mediator(hostBus);
 
     mediator
@@ -86,7 +94,11 @@ class NugetViewProvider implements vscode.WebviewViewProvider {
       .AddHandler(UPDATE_CONFIGURATION, new UpdateConfiguration())
       .AddHandler(GET_PACKAGE_DETAILS, new GetPackageDetails())
       .AddHandler(OPEN_URL, new OpenUrl())
-      .AddHandler(UPDATE_STATUS_BAR, new UpdateStatusBar());
+      .AddHandler(UPDATE_STATUS_BAR, new UpdateStatusBar())
+      .AddHandler(GET_OUTDATED_PACKAGES, new GetOutdatedPackages())
+      .AddHandler(BATCH_UPDATE_PACKAGES, new BatchUpdatePackages())
+      .AddHandler(GET_INCONSISTENT_PACKAGES, new GetInconsistentPackages())
+      .AddHandler(CONSOLIDATE_PACKAGES, new ConsolidatePackages());
 
     const webJsSrc = webviewView.webview.asWebviewUri(
       vscode.Uri.joinPath(this._extensionUri, ...["dist", "web.js"])

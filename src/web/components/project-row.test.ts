@@ -16,7 +16,8 @@ suite('ProjectRow Component', () => {
         return new ProjectViewModel({
             Name: name,
             Path: path,
-            Packages: packages.map(p => ({ ...p, IsPinned: p.IsPinned ?? false }))
+            Packages: packages.map(p => ({ ...p, IsPinned: p.IsPinned ?? false, VersionSource: "project" as VersionSource })),
+            CpmEnabled: false,
         });
     };
 

@@ -2,4 +2,4 @@ type OpenUrlRequest = {
   Url: string;
 };
 
-type OpenUrlResponse = {};
+type OpenUrlResponse = Record<string, never>;

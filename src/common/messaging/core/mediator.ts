@@ -36,8 +36,8 @@ export default class Mediator implements IMediator {
   }
 
   async PublishAsync<REQ, RES>(command: string, request: REQ): Promise<RES> {
-    let correlationId = nonce();
-    let message: MessageType = {
+    const correlationId = nonce();
+    const message: MessageType = {
       Headers: {
         Type: "REQUEST",
         Command: command,
@@ -45,13 +45,13 @@ export default class Mediator implements IMediator {
       },
       Body: request,
     };
-    let mutex = new Mutex();
-    let release = await mutex.acquire();
+    const mutex = new Mutex();
+    const release = await mutex.acquire();
     this._locks[correlationId] = { release: release };
     this._bus.Send(message);
     await mutex.waitForUnlock();
 
-    let response = this._locks[correlationId].response;
+    const response = this._locks[correlationId].response;
     if (response == undefined) throw "Response not set";
 
     delete this._locks[correlationId];
@@ -66,11 +66,11 @@ export default class Mediator implements IMediator {
   }
 
   async HandleRequest(message: MessageType) {
-    let handler = this._handlers[message.Headers.Command];
+    const handler = this._handlers[message.Headers.Command];
     if (handler == null) throw `No handler registered for command: ${message.Headers.Command}`;
 
-    let response = await handler.HandleAsync(message.Body);
-    let returnMessage: MessageType = {
+    const response = await handler.HandleAsync(message.Body);
+    const returnMessage: MessageType = {
       Headers: {
         Type: "RESPONSE",
         Command: message.Headers.Command,
@@ -83,7 +83,7 @@ export default class Mediator implements IMediator {
   }
 
   async HandleResponse(message: MessageType) {
-    let lockInfo = this._locks[message.Headers.CorrelationId];
+    const lockInfo = this._locks[message.Headers.CorrelationId];
     if (lockInfo == null)
       throw `No lock info found for correlationId: ${message.Headers.CorrelationId}`;
 

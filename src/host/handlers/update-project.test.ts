@@ -21,7 +21,8 @@ suite('UpdateProject Handler Tests', () => {
     const mockProject: Project = {
         Name: 'TestProject',
         Path: '/path/to/project.csproj',
-        Packages: []
+        Packages: [],
+        CpmEnabled: false,
     };
 
     setup(() => {

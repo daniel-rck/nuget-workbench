@@ -2,6 +2,6 @@ type UpdateConfigurationRequest = {
   Configuration: Configuration;
 };
 
-type UpdateConfigurationResponse = {};
+type UpdateConfigurationResponse = Record<string, never>;
 
 export { UpdateConfigurationRequest, UpdateConfigurationResponse };

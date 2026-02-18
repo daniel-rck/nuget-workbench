@@ -4,3 +4,4 @@ node_modules
 *.vsix
 dist
 .env
+.claude/settings.local.json

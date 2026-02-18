@@ -47,7 +47,7 @@ export class GetPackages implements IRequestHandler<GetPackagesRequest, GetPacka
             });
 
             const results = await Promise.all(promises);
-            let allPackages: Package[] = [];
+            const allPackages: Package[] = [];
             const seenIds = new Set<string>();
 
             results.forEach(result => {
@@ -74,23 +74,23 @@ export class GetPackages implements IRequestHandler<GetPackagesRequest, GetPacka
       }
 
       Logger.info(`GetPackages.HandleAsync: Fetching packages from ${request.Url} with filter '${request.Filter}'`);
-      let api = await nugetApiFactory.GetSourceApi(request.Url);
+      const api = await nugetApiFactory.GetSourceApi(request.Url);
       try {
-        let packages = await api.GetPackagesAsync(
+        const packages = await api.GetPackagesAsync(
           request.Filter,
           request.Prerelease,
           request.Skip,
           request.Take
         );
         Logger.info(`GetPackages.HandleAsync: Successfully fetched ${packages.data.length} packages`);
-        let result: GetPackagesResponse = {
+        const result: GetPackagesResponse = {
           IsFailure: false,
           Packages: packages.data,
         };
         return result;
       } catch (err: any) {
         Logger.error(`GetPackages.HandleAsync: Failed to fetch packages from ${request.Url}`, err);
-        let result: GetPackagesResponse = {
+        const result: GetPackagesResponse = {
           IsFailure: true,
           Error: {
             Message: "Failed to fetch packages",

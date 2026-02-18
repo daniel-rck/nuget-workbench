@@ -17,7 +17,8 @@ suite('GetProjects Handler Tests', () => {
     const createMockProject = (name: string, path: string): Project => ({
         Name: name,
         Path: path,
-        Packages: []
+        Packages: [],
+        CpmEnabled: false,
     });
 
     setup(() => {

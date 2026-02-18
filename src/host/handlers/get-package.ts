@@ -50,7 +50,7 @@ export class GetPackage implements IRequestHandler<GetPackageRequest, GetPackage
       }
 
       Logger.info(`GetPackage.HandleAsync: Successfully fetched package ${request.Id}`);
-      let result: GetPackageResponse = {
+      const result: GetPackageResponse = {
         IsFailure: false,
         Package: packageResult.data,
         SourceUrl: request.Url,
@@ -58,7 +58,7 @@ export class GetPackage implements IRequestHandler<GetPackageRequest, GetPackage
       return result;
     } catch (err: any) {
       Logger.error(`GetPackage.HandleAsync: Exception while fetching package ${request.Id} from ${request.Url}`, err);
-      let result: GetPackageResponse = {
+      const result: GetPackageResponse = {
         IsFailure: true,
         Error: {
           Message: "Failed to fetch package",
@@ -70,7 +70,7 @@ export class GetPackage implements IRequestHandler<GetPackageRequest, GetPackage
 
   private async fetchPackage(sourceUrl: string, packageId: string, prerelease: boolean, forceReload: boolean = false) {
     Logger.info(`GetPackage.HandleAsync: Fetching package ${packageId} from ${sourceUrl} (prerelease: ${prerelease})`);
-    let api = await nugetApiFactory.GetSourceApi(sourceUrl);
+    const api = await nugetApiFactory.GetSourceApi(sourceUrl);
     if (forceReload) {
       api.ClearPackageCache(packageId);
     }

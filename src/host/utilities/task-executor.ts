@@ -18,11 +18,11 @@ export class TaskExecutor {
       Logger.debug(`TaskExecutor.ExecuteTask: Process: ${procExec.process} ${(procExec.args || []).join(' ')}`);
     }
 
-    let releaser = await this.globalMutex.acquire();
-    let mutex = new Mutex();
+    const releaser = await this.globalMutex.acquire();
+    const mutex = new Mutex();
     mutex.acquire();
-    let execution = await vscode.tasks.executeTask(task);
-    let callback = vscode.tasks.onDidEndTask((x) => {
+    const execution = await vscode.tasks.executeTask(task);
+    const callback = vscode.tasks.onDidEndTask((x) => {
       if (x.execution.task == execution.task) {
         Logger.info(`TaskExecutor.ExecuteTask: Task ${task.name} completed`);
         mutex.release();

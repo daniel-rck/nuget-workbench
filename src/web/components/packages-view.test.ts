@@ -31,7 +31,8 @@ function createMockProject(name: string, packages: (ProjectPackage | { Id: strin
     return {
         Name: name,
         Path: `/path/to/${name}.csproj`,
-        Packages: packages.map(p => ({ ...p, IsPinned: (p as ProjectPackage).IsPinned ?? false }))
+        Packages: packages.map(p => ({ ...p, IsPinned: (p as ProjectPackage).IsPinned ?? false, VersionSource: (p as ProjectPackage).VersionSource ?? "project" as VersionSource })),
+        CpmEnabled: false,
     };
 }
 
@@ -445,8 +446,10 @@ suite('PackagesView Component', () => {
                 c => c.args[0] === 'GetProjects'
             );
 
-            assert.strictEqual(getPackagesCall!.args[1].ForceReload, true);
-            assert.strictEqual(getProjectsCall!.args[1].ForceReload, true);
+            assert.ok(getPackagesCall);
+            assert.strictEqual(getPackagesCall.args[1].ForceReload, true);
+            assert.ok(getProjectsCall);
+            assert.strictEqual(getProjectsCall.args[1].ForceReload, true);
         });
     });
 

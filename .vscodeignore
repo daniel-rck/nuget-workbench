@@ -7,7 +7,6 @@ src/**
 .env.*
 vsc-extension-quickstart.md
 **/tsconfig.json
-**/tslint.json
 **/*.map
 **/*.ts
 **/node_modules/**

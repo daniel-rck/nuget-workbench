@@ -84,11 +84,13 @@ export class PackageViewModel {
 export class ProjectViewModel {
   Name: string;
   Path: string;
+  CpmEnabled: boolean;
   @observable Packages: ProjectPackageViewModel[];
 
   constructor(model: Project) {
     this.Name = model.Name;
     this.Path = model.Path;
+    this.CpmEnabled = model.CpmEnabled;
     this.Packages = model.Packages.map((x) => new ProjectPackageViewModel(x));
   }
 }
@@ -97,11 +99,50 @@ export class ProjectPackageViewModel {
   Id: string;
   Version: string;
   IsPinned: boolean;
+  VersionSource: VersionSource;
 
   constructor(model: ProjectPackage) {
     this.Id = model.Id;
     this.Version = model.Version;
     this.IsPinned = model.IsPinned;
+    this.VersionSource = model.VersionSource;
+  }
+}
+
+export class OutdatedPackageViewModel {
+  Id: string;
+  InstalledVersion: string;
+  LatestVersion: string;
+  Projects: Array<{ Name: string; Path: string; Version: string }>;
+  SourceUrl: string;
+  SourceName: string;
+  @observable IsUpdating: boolean = false;
+  @observable Selected: boolean = false;
+
+  constructor(model: OutdatedPackage) {
+    this.Id = model.Id;
+    this.InstalledVersion = model.InstalledVersion;
+    this.LatestVersion = model.LatestVersion;
+    this.Projects = model.Projects;
+    this.SourceUrl = model.SourceUrl;
+    this.SourceName = model.SourceName;
+  }
+}
+
+export class InconsistentPackageViewModel {
+  Id: string;
+  Versions: Array<{ Version: string; Projects: Array<{ Name: string; Path: string }> }>;
+  LatestInstalledVersion: string;
+  CpmManaged: boolean;
+  @observable TargetVersion: string;
+  @observable IsConsolidating: boolean = false;
+
+  constructor(model: InconsistentPackage) {
+    this.Id = model.Id;
+    this.Versions = model.Versions;
+    this.LatestInstalledVersion = model.LatestInstalledVersion;
+    this.CpmManaged = model.CpmManaged;
+    this.TargetVersion = model.LatestInstalledVersion;
   }
 }
 
@@ -139,7 +180,7 @@ export class SourceViewModel {
     this.EditMode = false;
   }
   GetModel(): Source {
-    let model: Source = {
+    const model: Source = {
       Name: this.Name,
       Url: this.Url,
     };

@@ -12,14 +12,14 @@ export class GetProjects implements IRequestHandler<GetProjectsRequest, GetProje
       CpmResolver.ClearCache();
     }
     
-    let projectFiles = await vscode.workspace.findFiles(
+    const projectFiles = await vscode.workspace.findFiles(
       "**/*.{csproj,fsproj,vbproj}",
       "**/node_modules/**"
     );
 
     Logger.info(`GetProjects.HandleAsync: Found ${projectFiles.length} project files`);
 
-    let projects: Array<Project> = Array();
+    const projects: Array<Project> = [];
     projectFiles
       .map((x) => x.fsPath)
       .forEach((x) => {
@@ -30,20 +30,21 @@ export class GetProjects implements IRequestHandler<GetProjectsRequest, GetProje
           } else {
             Logger.debug(`GetProjects.HandleAsync: CPM not enabled for ${x}`);
           }
-          let project = ProjectParser.Parse(x, cpmVersions);
+          const project = ProjectParser.Parse(x, cpmVersions);
+          project.CpmEnabled = cpmVersions !== null;
           projects.push(project);
         } catch (e) {
           Logger.error(`GetProjects.HandleAsync: Failed to parse project ${x}`, e);
         }
       });
-    let compareName = (nameA: string, nameB: string) => {
+    const compareName = (nameA: string, nameB: string) => {
       return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
     };
-    let sortedProjects = projects.sort((a, b) =>
+    const sortedProjects = projects.sort((a, b) =>
       compareName(a.Name?.toLowerCase(), b.Name?.toLowerCase())
     );
 
-    let response: GetProjectsResponse = {
+    const response: GetProjectsResponse = {
       Projects: sortedProjects,
     };
     return response;

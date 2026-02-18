@@ -16,7 +16,7 @@ export default class ConfigurationService {
   }
 
   async Reload() {
-    let response = await this.mediator.PublishAsync<GetConfigurationRequest, GetConfigurationResponse>(
+    const response = await this.mediator.PublishAsync<GetConfigurationRequest, GetConfigurationResponse>(
       GET_CONFIGURATION,
       {}
     );

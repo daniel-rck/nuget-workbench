@@ -19,8 +19,8 @@ class NuGetApiFactory {
       const sources = await NuGetConfigResolver.GetSourcesAndDecodePasswords(workspaceRoot);
       const sourceWithCreds = sources.find(s => s.Url === url);
       
-      let username = sourceWithCreds?.Username;
-      let password = sourceWithCreds?.Password;
+      const username = sourceWithCreds?.Username;
+      const password = sourceWithCreds?.Password;
 
       if (username || password) {
         Logger.debug(`NuGetApiFactory.GetSourceApi: Found credentials for ${url} (username: ${username})`);

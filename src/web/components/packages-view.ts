@@ -12,6 +12,7 @@ import {
 
 import Split from "split.js";
 import hash from "object-hash";
+import lodash from "lodash";
 import { Configuration, IMediator } from "@/web/registrations";
 import {
   GET_PACKAGE,
@@ -31,9 +32,21 @@ import codicon from "@/web/styles/codicon.css";
 import { scrollableBase } from "@/web/styles/base.css";
 import { PackageViewModel, ProjectViewModel } from "../types";
 import { FilterEvent } from "./search-bar";
+import { UpdatesView } from "./updates-view";
+import { ConsolidateView } from "./consolidate-view";
 
 const template = html<PackagesView>`
   <div class="container">
+    <div class="col" id="project-tree">
+      <project-tree
+        :projects=${(x) => x.projects}
+        @selection-changed=${(x, c) =>
+          x.OnProjectSelectionChanged(
+            (c.event as CustomEvent<string[]>).detail
+          )}
+      ></project-tree>
+    </div>
+
     <div class="col" id="packages">
       <search-bar
         @reload-invoked=${async (x, e) =>
@@ -43,9 +56,13 @@ const template = html<PackagesView>`
             (e.event as CustomEvent<FilterEvent>).detail
           )}
       ></search-bar>
-      <vscode-panels class="tabs" aria-label="Default">
+      <vscode-panels class="tabs" aria-label="Default"
+        @change=${(x, c) => x.OnTabChanged(c.event)}
+      >
         <vscode-panel-tab class="tab" id="tab-1">BROWSE</vscode-panel-tab>
         <vscode-panel-tab class="tab" id="tab-2">INSTALLED</vscode-panel-tab>
+        <vscode-panel-tab class="tab" id="tab-3">UPDATES</vscode-panel-tab>
+        <vscode-panel-tab class="tab" id="tab-4">CONSOLIDATE</vscode-panel-tab>
         <vscode-panel-view class="views" id="view-1">
           <div
             class="packages-container"
@@ -95,6 +112,17 @@ const template = html<PackagesView>`
               `
             )}
           </div>
+        </vscode-panel-view>
+        <vscode-panel-view class="views" id="view-3">
+          <updates-view
+            :prerelease=${(x) => x.filters.Prerelease}
+            :projectPaths=${(x) => x.selectedProjectPaths}
+          ></updates-view>
+        </vscode-panel-view>
+        <vscode-panel-view class="views" id="view-4">
+          <consolidate-view
+            :projectPaths=${(x) => x.selectedProjectPaths}
+          ></consolidate-view>
         </vscode-panel-view>
       </vscode-panels>
     </div>
@@ -152,7 +180,7 @@ const template = html<PackagesView>`
                   (x) => x.projects.length > 0,
                   html<PackagesView>`
                     ${repeat(
-                      (x) => x.projects,
+                      (x) => x.filteredProjects,
                       html<ProjectViewModel>`
                         <project-row
                           @project-updated=${(
@@ -237,6 +265,11 @@ const styles = css`
     .gutter-nested {
       width: 1px;
       background-color: var(--vscode-panelSection-border);
+    }
+
+    #project-tree {
+      display: flex;
+      flex-direction: column;
     }
 
     #packages {
@@ -364,6 +397,9 @@ export class PackagesView extends FASTElement {
   packagesPage: number = 0;
   packagesLoadingInProgress: boolean = false;
   currentLoadPackageHash: string = "";
+  activeTabId: string = "tab-1";
+  updatesLoaded: boolean = false;
+  consolidateLoaded: boolean = false;
   @IMediator mediator!: IMediator;
   @Configuration configuration!: Configuration;
   @observable projects: Array<ProjectViewModel> = [];
@@ -378,17 +414,20 @@ export class PackagesView extends FASTElement {
   };
   @observable noMorePackages: boolean = false;
   @observable packagesLoadingError: boolean = false;
+  @observable selectedProjectPaths: string[] = [];
 
   connectedCallback(): void {
     super.connectedCallback();
 
-    let packages: HTMLElement = this.shadowRoot?.getElementById("packages")!;
-    let projects: HTMLElement = this.shadowRoot?.getElementById("projects")!;
+    const projectTree = this.shadowRoot!.getElementById("project-tree")!;
+    const packages = this.shadowRoot!.getElementById("packages")!;
+    const projects = this.shadowRoot!.getElementById("projects")!;
 
-    this.splitter = Split([packages, projects], {
-      sizes: [60, 40],
+    this.splitter = Split([projectTree, packages, projects], {
+      sizes: [20, 45, 35],
+      minSize: [120, 200, 150],
       gutterSize: 4,
-      gutter: (index: number, direction) => {
+      gutter: (_index: number, direction) => {
         const gutter = document.createElement("div");
         const gutterNested = document.createElement("div");
         gutter.className = `gutter gutter-${direction}`;
@@ -436,8 +475,50 @@ export class PackagesView extends FASTElement {
     );
   }
 
+  @volatile
+  get filteredProjects(): Array<ProjectViewModel> {
+    if (this.selectedProjectPaths.length === 0) return this.projects;
+    return this.projects.filter((p) => this.selectedProjectPaths.includes(p.Path));
+  }
+
+  OnProjectSelectionChanged(paths: string[]) {
+    this.selectedProjectPaths = paths;
+    this.updatesLoaded = false;
+    this.consolidateLoaded = false;
+    this.debouncedLoadProjectsPackages();
+  }
+
+  private debouncedLoadProjectsPackages = lodash.debounce(() => {
+    this.LoadProjectsPackages();
+  }, 300);
+
+  OnTabChanged(event: Event) {
+    const panel = event.target as HTMLElement;
+    const activeTab = panel?.querySelector?.("[aria-selected='true']");
+    const tabId = activeTab?.id || "";
+    this.activeTabId = tabId;
+
+    if (tabId === "tab-3") {
+      const updatesView = this.shadowRoot?.querySelector("updates-view") as UpdatesView | null;
+      if (updatesView && !this.updatesLoaded) {
+        this.updatesLoaded = true;
+        updatesView.LoadOutdatedPackages();
+      }
+    } else if (tabId === "tab-4") {
+      const consolidateView = this.shadowRoot?.querySelector("consolidate-view") as ConsolidateView | null;
+      if (consolidateView && !this.consolidateLoaded) {
+        this.consolidateLoaded = true;
+        consolidateView.LoadInconsistentPackages();
+      }
+    }
+  }
+
   async LoadProjectsPackages(forceReload: boolean = false) {
-    var packages = this.projects
+    const projectsToUse = this.selectedProjectPaths.length > 0
+      ? this.projects.filter((p) => this.selectedProjectPaths.includes(p.Path))
+      : this.projects;
+
+    const packages = projectsToUse
       ?.flatMap((p) => p.Packages)
       .filter((x) =>
         x.Id.toLowerCase().includes(this.filters.Query?.toLowerCase())
@@ -507,7 +588,7 @@ export class PackagesView extends FASTElement {
         Message: "Loading installed packages...",
       });
     }
-    
+
     try {
       const promises = this.projectsPackages.map(async (pkg) => {
         await this.UpdatePackage(pkg, forceReload);
@@ -545,7 +626,7 @@ export class PackagesView extends FASTElement {
   }
 
   async UpdatePackage(projectPackage: PackageViewModel, forceReload: boolean = false) {
-    let result = await this.mediator.PublishAsync<
+    const result = await this.mediator.PublishAsync<
       GetPackageRequest,
       GetPackageResponse
     >(GET_PACKAGE, {
@@ -583,8 +664,8 @@ export class PackagesView extends FASTElement {
     selectedPackage.Selected = true;
     this.selectedPackage = selectedPackage;
     if (this.selectedPackage.Status == "MissingDetails") {
-      let packageToUpdate = this.selectedPackage;
-      let result = await this.mediator.PublishAsync<
+      const packageToUpdate = this.selectedPackage;
+      const result = await this.mediator.PublishAsync<
         GetPackageRequest,
         GetPackageResponse
       >(GET_PACKAGE, {
@@ -618,10 +699,12 @@ export class PackagesView extends FASTElement {
   async ReloadInvoked(forceReload: boolean = false) {
     await this.LoadPackages(false, forceReload);
     await this.LoadProjects(forceReload);
+    this.updatesLoaded = false;
+    this.consolidateLoaded = false;
   }
 
   async LoadPackages(append: boolean = false, forceReload: boolean = false) {
-    let _getLoadPackageRequest = () => {
+    const _getLoadPackageRequest = () => {
       return {
         Url: this.filters.SourceUrl,
         SourceName: this.CurrentSource?.Name,
@@ -643,10 +726,10 @@ export class PackagesView extends FASTElement {
     }
     this.noMorePackages = false;
 
-    let requestObject = _getLoadPackageRequest();
+    const requestObject = _getLoadPackageRequest();
     this.currentLoadPackageHash = hash(requestObject);
 
-    let result = await this.mediator.PublishAsync<
+    const result = await this.mediator.PublishAsync<
       GetPackagesRequest,
       GetPackagesResponse
     >(GET_PACKAGES, requestObject);
@@ -654,7 +737,7 @@ export class PackagesView extends FASTElement {
     if (result.IsFailure) {
       this.packagesLoadingError = true;
     } else {
-      let packagesViewModels = result.Packages!.map(
+      const packagesViewModels = result.Packages!.map(
         (x) => new PackageViewModel(x)
       );
       if (packagesViewModels.length < requestObject.Take)
@@ -667,12 +750,13 @@ export class PackagesView extends FASTElement {
 
   async LoadProjects(forceReload: boolean = false) {
     this.projects = [];
-    let result = await this.mediator.PublishAsync<
+    const result = await this.mediator.PublishAsync<
       GetProjectsRequest,
       GetProjectsResponse
     >(GET_PROJECTS, { ForceReload: forceReload });
 
     this.projects = result.Projects.map((x) => new ProjectViewModel(x));
+    this.selectedProjectPaths = this.projects.map((p) => p.Path);
     await this.LoadProjectsPackages(forceReload);
   }
 }

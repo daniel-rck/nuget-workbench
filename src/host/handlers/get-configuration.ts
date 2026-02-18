@@ -10,7 +10,7 @@ export default class GetConfiguration implements IRequestHandler<GetConfiguratio
     try {
       await config.update("sources", undefined, vscode.ConfigurationTarget.Workspace);
       await config.update("skipRestore", undefined, vscode.ConfigurationTarget.Workspace);
-    } catch {}
+    } catch { /* workspace config cleanup - ignore errors */ }
     config = vscode.workspace.getConfiguration("NugetGallery");
 
     // Get sources from NuGet.config and VSCode settings, decode passwords
@@ -43,7 +43,7 @@ export default class GetConfiguration implements IRequestHandler<GetConfiguratio
       }
     });
 
-    let result: GetConfigurationResponse = {
+    const result: GetConfigurationResponse = {
       Configuration: {
         SkipRestore: config.get("skipRestore") ?? false,
         EnablePackageVersionInlineInfo: config.get("enablePackageVersionInlineInfo") ?? false,

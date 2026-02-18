@@ -18,6 +18,11 @@ const template = html<SearchBar>`
       <vscode-button appearance="icon" @click=${(x) => x.ReloadClicked()}>
         <span class="codicon codicon-refresh"></span>
       </vscode-button>
+      <vscode-checkbox
+        :checked="${(x) => x.prerelase}"
+        @change=${(x, c) => x.PrerelaseChangedEvent(c.event.target!)}
+        >Prerelease</vscode-checkbox
+      >
     </div>
     <div class="search-bar-right">
       <vscode-dropdown
@@ -30,11 +35,6 @@ const template = html<SearchBar>`
           html<Source>` <vscode-option :value="${(x) => x.Url}">${(x) => x.Name}</vscode-option> `
         )}
       </vscode-dropdown>
-      <vscode-checkbox
-        :checked="${(x) => x.prerelase}"
-        @change=${(x, c) => x.PrerelaseChangedEvent(c.event.target!)}
-        >Prerelease</vscode-checkbox
-      >
     </div>
   </div>
 `;
@@ -48,7 +48,8 @@ const styles = css`
     .search-bar-left {
       flex: 1;
       display: flex;
-      gap: 4px;
+      align-items: center;
+      gap: 6px;
       .search-text-field {
         flex: 1;
         max-width: 340px;
@@ -126,12 +127,12 @@ export class SearchBar extends FASTElement {
   }
 
   ReloadClicked() {
-    let forceReload = true;
+    const forceReload = true;
     this.$emit("reload-invoked", forceReload);
   }
 
   EmitFilterChangedEvent() {
-    let filterEvent: FilterEvent = {
+    const filterEvent: FilterEvent = {
       Query: this.filterQuery,
       Prerelease: this.prerelase,
       SourceUrl: this.selectedSourceUrl,

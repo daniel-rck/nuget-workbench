@@ -144,13 +144,13 @@ export class PackageDetailsComponent extends FASTElement {
     if (!this.packageVersionUrl) return;
     this.packageDetailsLoading = true;
 
-    let request: GetPackageDetailsRequest = {
+    const request: GetPackageDetailsRequest = {
       PackageVersionUrl: this.packageVersionUrl,
       SourceUrl: this.source,
       PasswordScriptPath: this.passwordScriptPath,
     };
 
-    let result = await this.mediator.PublishAsync<
+    const result = await this.mediator.PublishAsync<
       GetPackageDetailsRequest,
       GetPackageDetailsResponse
     >(GET_PACKAGE_DETAILS, request);

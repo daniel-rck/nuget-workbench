@@ -11,10 +11,10 @@ export class GetPackageDetails
     if (!request.SourceUrl) return this.GetError("SourceUrl is empty");
     if (!request.PackageVersionUrl) return this.GetError("PackageVersionUrl is empty");
 
-    let api = await nugetApiFactory.GetSourceApi(request.SourceUrl);
+    const api = await nugetApiFactory.GetSourceApi(request.SourceUrl);
     try {
-      let packageDetails = await api.GetPackageDetailsAsync(request.PackageVersionUrl);
-      let result: GetPackageDetailsResponse = {
+      const packageDetails = await api.GetPackageDetailsAsync(request.PackageVersionUrl);
+      const result: GetPackageDetailsResponse = {
         IsFailure: false,
         Package: packageDetails.data,
       };
@@ -26,7 +26,7 @@ export class GetPackageDetails
   }
 
   private GetError(error: string): GetPackageDetailsResponse {
-    let result: GetPackageDetailsResponse = {
+    const result: GetPackageDetailsResponse = {
       IsFailure: true,
       Error: {
         Message: error,

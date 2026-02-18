@@ -1,10 +1,10 @@
-var last = 0;
-var repeat = 0;
+let last = 0;
+let repeat = 0;
 
 export default function (): number {
-  var length = 15;
+  const length = 15;
 
-  var now = Math.pow(10, 2) * +new Date();
+  const now = Math.pow(10, 2) * +new Date();
 
   if (now == last) {
     repeat++;
@@ -13,6 +13,6 @@ export default function (): number {
     last = now;
   }
 
-  var s = (now + repeat).toString();
+  const s = (now + repeat).toString();
   return +s.substring(s.length - length);
 }

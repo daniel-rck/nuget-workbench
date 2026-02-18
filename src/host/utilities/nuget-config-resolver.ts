@@ -62,8 +62,7 @@ export default class NuGetConfigResolver {
             }
           }
         }
-      } catch {
-      }
+      } catch { /* ignore unparseable source entries */ }
     });
 
     const sources = Array.from(sourcesMap.values());

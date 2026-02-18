@@ -49,7 +49,7 @@ export default class NuGetApi {
   ): Promise<GetPackagesResponse> {
     Logger.debug(`NuGetApi.GetPackagesAsync: Fetching packages (filter: '${filter}', prerelease: ${prerelease}, skip: ${skip}, take: ${take})`);
     await this.EnsureSearchUrl();
-    let result = await this.ExecuteGet(this._searchUrl, {
+    const result = await this.ExecuteGet(this._searchUrl, {
       params: {
         q: filter,
         take: take,
@@ -93,11 +93,11 @@ export default class NuGetApi {
 
     Logger.debug(`NuGetApi.GetPackageAsync: Fetching package info for ${id} (prerelease: ${prerelease})`);
     await this.EnsureSearchUrl();
-    let url = new URL([id.toLowerCase(), "index.json"].join("/"), this._packageInfoUrl).href;
-    let items: Array<any> = [];
+    const url = new URL([id.toLowerCase(), "index.json"].join("/"), this._packageInfoUrl).href;
+    const items: Array<any> = [];
     try {
       Logger.debug(`NuGetApi.GetPackageAsync: GET ${url}`);
-      let result = await this.http.get(url);
+      const result = await this.http.get(url);
       if (result instanceof AxiosError) {
         Logger.error("NuGetApi.GetPackageAsync: Axios Error Data:", result.response?.data);
         return {
@@ -108,10 +108,10 @@ export default class NuGetApi {
       }
 
       for (let i = 0; i < result.data.count; i++) {
-        let page = result.data.items[i];
+        const page = result.data.items[i];
         if (page.items) items.push(...page.items);
         else {
-          let pageData = await this.http.get(page["@id"]);
+          const pageData = await this.http.get(page["@id"]);
           if (pageData instanceof AxiosError) {
             Logger.error("NuGetApi.GetPackageAsync: Axios Error while loading page data:", pageData.message);
           } else {
@@ -137,9 +137,9 @@ export default class NuGetApi {
     }
     
     const itemsToUse = filteredItems.length > 0 ? filteredItems : items;
-    let item = itemsToUse[itemsToUse.length - 1];
-    let catalogEntry = item.catalogEntry;
-    let packageObject: Package = {
+    const item = itemsToUse[itemsToUse.length - 1];
+    const catalogEntry = item.catalogEntry;
+    const packageObject: Package = {
       Id: item["@id"] || "",
       Name: catalogEntry?.id || "",
       Authors: catalogEntry?.authors || [],
@@ -177,7 +177,7 @@ export default class NuGetApi {
     try {
       await this.EnsureSearchUrl();
       Logger.debug(`NuGetApi.GetPackageDetailsAsync: Fetching package version from ${packageVersionUrl}`);
-      let packageVersion = await this.ExecuteGet(packageVersionUrl);
+      const packageVersion = await this.ExecuteGet(packageVersionUrl);
       
       if (!packageVersion.data?.catalogEntry) {
         Logger.debug(`NuGetApi.GetPackageDetailsAsync: No catalogEntry found in package version response`);
@@ -213,11 +213,11 @@ export default class NuGetApi {
           };
         }
         Logger.debug(`NuGetApi.GetPackageDetailsAsync: Fetching catalog from ${catalogUrl}`);
-        let result = await this.ExecuteGet(catalogUrl);
+        const result = await this.ExecuteGet(catalogUrl);
         catalogData = result.data;
       }
 
-      let packageDetails: PackageDetails = {
+      const packageDetails: PackageDetails = {
         dependencies: {
           frameworks: {},
         },
@@ -227,7 +227,7 @@ export default class NuGetApi {
       Logger.debug(`NuGetApi.GetPackageDetailsAsync: Found ${dependencyGroupCount} dependency groups`);
 
       catalogData?.dependencyGroups?.forEach((dependencyGroup: any) => {
-        let targetFramework = dependencyGroup.targetFramework;
+        const targetFramework = dependencyGroup.targetFramework;
         packageDetails.dependencies.frameworks[targetFramework] = [];
         dependencyGroup.dependencies?.forEach((dependency: any) => {
           packageDetails.dependencies.frameworks[targetFramework].push({
@@ -252,7 +252,7 @@ export default class NuGetApi {
     if (this._searchUrl !== "" && this._packageInfoUrl !== "") return;
 
     Logger.debug(`NuGetApi.EnsureSearchUrl: resolving service URLs from ${this._url}`);
-    let response = await this.ExecuteGet(this._url);
+    const response = await this.ExecuteGet(this._url);
 
     this._searchUrl = await this.GetUrlFromNugetDefinition(response, "SearchQueryService");
     if (this._searchUrl == "") throw { message: "SearchQueryService couldn't be found" };
@@ -265,7 +265,7 @@ export default class NuGetApi {
   }
 
   private async GetUrlFromNugetDefinition(response: any, type: string): Promise<string> {
-    let resource = response.data.resources.find((x: any) => x["@type"].includes(type));
+    const resource = response.data.resources.find((x: any) => x["@type"].includes(type));
     if (resource != null) return resource["@id"];
     else return "";
   }

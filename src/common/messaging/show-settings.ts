@@ -1,3 +1,3 @@
-type ShowSettingsRequest = {};
+type ShowSettingsRequest = Record<string, never>;
 
-type ShowSettingsResponse = {};
+type ShowSettingsResponse = Record<string, never>;

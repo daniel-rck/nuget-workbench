@@ -16,9 +16,9 @@ export type Router = RouterType;
 export const Configuration = DI.createInterface<ConfigurationService>();
 export type Configuration = ConfigurationService;
 
-let mediator = new Mediator(new WebBus());
-let router = new RouterType();
-let configuration = new ConfigurationService(mediator);
+const mediator = new Mediator(new WebBus());
+const router = new RouterType();
+const configuration = new ConfigurationService(mediator);
 
 mediator.AddHandler(SHOW_SETTINGS, new ShowSettings(router));
 

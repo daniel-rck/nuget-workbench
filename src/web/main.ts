@@ -24,6 +24,9 @@ import { PackageDetailsComponent } from "./components/package-details";
 import "./main.css";
 import { ExpandableContainer } from "./components/expandable-container";
 import { SearchBar } from "./components/search-bar";
+import { UpdatesView } from "./components/updates-view";
+import { ConsolidateView } from "./components/consolidate-view";
+import { ProjectTree } from "./components/project-tree";
 
 provideVSCodeDesignSystem().register(
   registrations(),
@@ -43,7 +46,10 @@ provideVSCodeDesignSystem().register(
   SettingsView,
   PackageDetailsComponent,
   ExpandableContainer,
-  SearchBar
+  SearchBar,
+  UpdatesView,
+  ConsolidateView,
+  ProjectTree
 );
 
 const template = html<VSCodeNuGetGallery>`
