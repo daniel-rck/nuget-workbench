@@ -1,39 +1,29 @@
-# Change Log
+# Changelog
 
-All notable changes to the "nuget-workbench" extension will be documented in this file.
+## Unreleased
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## 1.0.0 (2026-02-18)
 
-## [1.0.0]
-
-### Added
-
-- Rebranded from "NuGet Gallery" to **NuGet Workbench** with new extension ID `nuget-workbench`
-- Typed RPC layer with `Result<T>` discriminated union for host-webview communication
-- Migrated UI from FAST Element to **Lit** (LitElement) web components
-- Vulnerability scanning view with severity badges and advisory links
-- Project tree with checkbox-based multi-project selection
-- Tab-based navigation (Packages, Updates, Consolidate, Vulnerabilities, Settings)
-- Confirmation dialogs for destructive actions (uninstall, update all, consolidate all, remove source)
-- Keyboard navigation and ARIA accessibility for package rows and interactive elements
-- Central Package Management (CPM) support with `Directory.Packages.props` detection
-- NuGet.config authentication support with password script decryption
-- Inline package version decorations in project files (configurable via `NugetWorkbench.enablePackageVersionInlineInfo`)
-- Prerelease version support (configurable via `NugetWorkbench.prerelease`)
-- Status bar loading indicator (configurable via `NugetWorkbench.statusBarLoadingIndicator`)
-- Configurable logging level (configurable via `NugetWorkbench.logLevel`)
-- Support for pinned package versions using NuGet's exact version notation `[x.x.x]`
-- Multi-source search with "All" option in source dropdown
-- OpenTelemetry tracing support
-
-### Changed
-
-- Complete architecture rewrite with typed RPC replacing untyped message passing
-- Resizable 3-pane layout using Split.js (project tree / package list / details)
-- Improved error handling with `Result<T>` pattern throughout
-- Configuration namespace changed from `NugetGallery.*` to `NugetWorkbench.*`
+- feat: Rebrand from "NuGet Gallery" to **NuGet Workbench** with new extension ID
+- feat: Typed RPC layer with `Result<T>` for host-webview communication
+- feat: UI migration from FAST Element to Lit (LitElement)
+- feat: Vulnerability scanning view with severity badges and advisory links
+- feat: Project tree with checkbox-based multi-project selection
+- feat: Confirmation dialogs for destructive actions (uninstall, update all, consolidate)
+- feat: Keyboard navigation and ARIA accessibility for all interactive elements
+- feat: Central Package Management (CPM) support
+- feat: NuGet.config authentication with password script decryption
+- feat: Inline package version decorations in project files
+- feat: Prerelease version support, pinned versions (`[x.x.x]`)
+- feat: Multi-source search with "All" option
+- feat: Status bar loading indicator
+- refactor: Complete architecture overhaul (typed RPC replacing untyped messages)
+- refactor: Resizable 3-pane layout with Split.js
+- test: 313 tests (unit + component tests for all handlers and UI components)
+- chore: GitHub Actions CI/CD pipeline with automatic Marketplace publish
 
 ### Credits
 
-This extension builds upon [vscode-nuget-gallery](https://github.com/pcislo/vscode-nuget-gallery) by [Patryk Cislo](https://github.com/pcislo).
+This extension builds upon:
+- [pcislo/vscode-nuget-gallery](https://github.com/pcislo/vscode-nuget-gallery) by [Patryk Cislo](https://github.com/pcislo) (original author)
+- [shis91/vscode-nuget-gallery](https://github.com/shis91/vscode-nuget-gallery) by [shis91](https://github.com/shis91) (major feature additions, CPM, authentication, test infrastructure)

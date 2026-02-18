@@ -86,6 +86,7 @@ Run a single test file by modifying `.vscode-test.mjs` config or using the test 
 - **Error responses**: RPC methods return `Result<T>` - use `ok(value)` / `fail(error)` helpers
 - **Styling**: CSS-in-JS via Lit `css` tagged template literals, using VS Code CSS variables
 - **Commit messages**: English, conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
+- **Language**: ALL written content must be in English — code comments, changelogs, documentation, commit messages, JSDoc, TODO comments. No German in the codebase.
 
 ## Technology Stack
 
