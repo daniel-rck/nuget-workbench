@@ -1,9 +1,9 @@
 {
   "name": "nuget-workbench",
-  "publisher": "daniel-rck",
+  "publisher": "nuget-workbench",
   "displayName": "NuGet Workbench",
   "description": "A comprehensive NuGet package management extension for Visual Studio Code with vulnerability scanning, multi-project support, and version consolidation.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "icon": "docs/images/icon.png",
   "galleryBanner": {
@@ -18,9 +18,7 @@
     "dotnet",
     "package manager",
     "csharp",
-    "fsharp",
-    "nuget gallery",
-    "vulnerability"
+    "dependency management"
   ],
   "categories": [
     "Programming Languages",
@@ -29,7 +27,7 @@
   "homepage": "https://github.com/nuget-workbench/nuget-workbench-vscode",
   "bugs": {
     "url": "https://github.com/nuget-workbench/nuget-workbench-vscode/issues",
-    "email": "daniel-rck@proton.me"
+    "email": "nuget-workbench@proton.me"
   },
   "repository": {
     "type": "git",
@@ -60,12 +58,12 @@
         "title": "NuGet Workbench: Remove Package"
       },
       {
-        "command": "nuget-workbench.openSettings",
+        "command": "nugetWorkbench.openSettings",
         "title": "Settings",
         "icon": "$(extensions-manage)"
       },
       {
-        "command": "nuget-workbench.reportProblem",
+        "command": "nugetWorkbench.reportProblem",
         "title": "Report Problem",
         "icon": "$(report)"
       }
@@ -73,12 +71,12 @@
     "menus": {
       "view/title": [
         {
-          "command": "nuget-workbench.reportProblem",
+          "command": "nugetWorkbench.reportProblem",
           "when": "view == nugetWorkbench.packageView",
           "group": "navigation@1"
         },
         {
-          "command": "nuget-workbench.openSettings",
+          "command": "nugetWorkbench.openSettings",
           "when": "view == nugetWorkbench.packageView",
           "group": "navigation@2"
         }
@@ -105,17 +103,17 @@
     "configuration": {
       "title": "NuGet Workbench",
       "properties": {
-        "nugetWorkbench.defaultSource": {
+        "NugetWorkbench.defaultSource": {
           "type": "string",
           "default": "",
           "description": "Default package source URL. If empty, uses the default from nuget.config."
         },
-        "nugetWorkbench.pageSize": {
+        "NugetWorkbench.pageSize": {
           "type": "number",
           "default": 20,
           "description": "Number of packages per search page."
         },
-        "nugetWorkbench.showOutputOnError": {
+        "NugetWorkbench.showOutputOnError": {
           "type": "boolean",
           "default": true,
           "description": "Automatically expand the output log when an operation fails."
@@ -173,7 +171,9 @@
     "test": "vscode-test",
     "esbuild": "node ./esbuild.js",
     "test-compile": "tsc -p ./tsconfig.test.json",
-    "package": "vsce package --no-dependencies --out releases/"
+    "package": "vsce package --no-dependencies --out releases/",
+    "release": "npm version patch && git push origin main --follow-tags",
+    "screenshot": "node tools/take-screenshots.mjs"
   },
   "devDependencies": {
     "@types/jsdom": "^27.0.0",
@@ -195,7 +195,10 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3",
-    "typescript-eslint": "^8.56.0"
+    "typescript-eslint": "^8.56.0",
+    "playwright": "^1.49.0",
+    "pngjs": "^7.0.0",
+    "gif-encoder-2": "^1.0.5"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.8.0",

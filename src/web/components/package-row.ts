@@ -2,6 +2,22 @@ import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { PackageViewModel } from "../types";
 import codicon from "@/web/styles/codicon.css";
+import { sharedStyles } from "@/web/styles/shared.css";
+
+export interface PackageRowData {
+  Name: string;
+  IconUrl: string;
+  Authors: string;
+  Description: string;
+  Version: string;
+  InstalledVersion: string;
+  TotalDownloads: number;
+  Verified: boolean;
+  Selected: boolean;
+  Status: "Detailed" | "MissingDetails" | "Error";
+  AllowsUpdate: boolean;
+  UpdateVersion?: string;
+}
 
 const DEFAULT_ICON_URL = "https://nuget.org/Content/gallery/img/default-package-icon.svg";
 
@@ -15,7 +31,8 @@ const styles = css`
     cursor: default;
 
     &.package-row-selected {
-      background-color: var(--vscode-list-inactiveSelectionBackground);
+      background-color: var(--vscode-list-activeSelectionBackground);
+      color: var(--vscode-list-activeSelectionForeground);
     }
 
     &.package-row-error {
@@ -85,16 +102,6 @@ const styles = css`
       align-items: center;
       gap: 3px;
       flex-shrink: 0;
-
-      .spinner {
-        display: inline-block;
-        width: 12px;
-        height: 12px;
-        border: 2px solid var(--vscode-progressBar-background);
-        border-top-color: transparent;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
     }
 
     .description {
@@ -124,21 +131,39 @@ const styles = css`
     .verified-badge {
       color: var(--vscode-charts-blue, #3794ff);
     }
-  }
 
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
+    .update-version {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      white-space: nowrap;
+
+      .old-version {
+        color: var(--vscode-descriptionForeground);
+      }
+
+      .arrow {
+        font-size: 10px;
+        color: var(--vscode-descriptionForeground);
+      }
+
+      .new-version {
+        color: var(--vscode-charts-green, #10b981);
+        font-weight: bold;
+      }
     }
   }
 `;
 
 @customElement("package-row")
 export class PackageRow extends LitElement {
-  static styles = [codicon, styles];
+  static styles = [codicon, sharedStyles, styles];
 
   @property({ type: Boolean }) showInstalledVersion!: boolean;
+  @property() updateVersion: string = "";
   @property({ type: Object }) package!: PackageViewModel;
+  @property({ type: Number }) revision: number = 0;
   @state() iconUrl: string | null = null;
 
   get resolvedIconUrl(): string {
@@ -159,6 +184,16 @@ export class PackageRow extends LitElement {
   }
 
   private renderVersionContent() {
+    if (this.updateVersion) {
+      return html`
+        <span class="update-version">
+          <span class="old-version">${this.package.InstalledVersion || this.package.Version}</span>
+          <span class="codicon codicon-arrow-right arrow"></span>
+          <span class="new-version">${this.updateVersion}</span>
+        </span>
+      `;
+    }
+
     if (!this.showInstalledVersion) {
       return html`${this.package.Version}`;
     }
@@ -171,7 +206,7 @@ export class PackageRow extends LitElement {
     return html`
       ${this.package.InstalledVersion}
       ${this.package.Status === "MissingDetails"
-        ? html`<span class="spinner"></span>`
+        ? html`<span class="spinner small"></span>`
         : nothing}
       ${this.package.Status === "Error"
         ? html`<span

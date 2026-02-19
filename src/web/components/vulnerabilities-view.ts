@@ -1,8 +1,9 @@
 import { LitElement, css, html, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 
 import codicon from "@/web/styles/codicon.css";
 import { scrollableBase } from "@/web/styles/base.css";
+import { sharedStyles } from "@/web/styles/shared.css";
 import { hostApi } from "@/web/registrations";
 import { VulnerablePackageViewModel } from "../types";
 
@@ -18,57 +19,20 @@ export class VulnerabilitiesView extends LitElement {
   static styles = [
     codicon,
     scrollableBase,
+    sharedStyles,
     css`
+      :host {
+        display: flex;
+        flex: 1;
+        width: 100%;
+      }
+
       .vuln-container {
         display: flex;
         flex-direction: column;
         height: 100%;
+        width: 100%;
         overflow: hidden;
-
-        .toolbar {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 4px;
-          margin-bottom: 6px;
-
-          .status-text {
-            font-size: 12px;
-            color: var(--vscode-descriptionForeground);
-            flex: 1;
-          }
-        }
-
-        .loading {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          margin-top: 32px;
-          color: var(--vscode-descriptionForeground);
-          font-size: 12px;
-        }
-
-        .empty {
-          display: flex;
-          gap: 6px;
-          justify-content: center;
-          margin-top: 32px;
-          color: var(--vscode-descriptionForeground);
-        }
-
-        .error {
-          display: flex;
-          gap: 4px;
-          justify-content: center;
-          margin-top: 32px;
-          color: var(--vscode-errorForeground);
-        }
-
-        .package-list {
-          overflow-y: auto;
-          flex: 1;
-        }
 
         .vuln-row {
           padding: 6px;
@@ -95,6 +59,11 @@ export class VulnerabilitiesView extends LitElement {
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
+              cursor: pointer;
+            }
+
+            .package-name:hover {
+              text-decoration: underline;
             }
 
             .advisory-link {
@@ -137,31 +106,6 @@ export class VulnerabilitiesView extends LitElement {
           }
         }
       }
-
-      button.icon-btn {
-        background: transparent;
-        border: none;
-        color: var(--vscode-icon-foreground);
-        cursor: pointer;
-        padding: 2px;
-      }
-
-      .spinner {
-        display: inline-block;
-        border: 2px solid var(--vscode-progressBar-background);
-        border-top-color: transparent;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      .spinner.large {
-        width: 20px;
-        height: 20px;
-      }
     `,
   ];
 
@@ -169,7 +113,17 @@ export class VulnerabilitiesView extends LitElement {
   @state() isLoading: boolean = false;
   @state() hasError: boolean = false;
   @state() statusText: string = "";
-  @state() projectPaths: string[] = [];
+  @property({ attribute: false }) projectPaths: string[] = [];
+
+  private loaded = false;
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (!this.loaded) {
+      this.loaded = true;
+      this.LoadVulnerablePackages();
+    }
+  }
 
   async LoadVulnerablePackages(): Promise<void> {
     this.isLoading = true;
@@ -188,6 +142,11 @@ export class VulnerabilitiesView extends LitElement {
         this.packages = (result.value.Packages ?? []).map(
           (p) => new VulnerablePackageViewModel(p)
         );
+        this.dispatchEvent(new CustomEvent<number>("count-changed", {
+          detail: this.packages.length,
+          bubbles: true,
+          composed: true,
+        }));
         this.statusText =
           this.packages.length > 0
             ? `${this.packages.length} vulnerabilit${this.packages.length !== 1 ? "ies" : "y"} found`
@@ -202,6 +161,14 @@ export class VulnerabilitiesView extends LitElement {
 
   private getSeverityColor(severity: number): string {
     return severityColors[severity] ?? severityColors[0];
+  }
+
+  private selectPackage(packageId: string): void {
+    this.dispatchEvent(new CustomEvent("package-selected", {
+      detail: { packageId },
+      bubbles: true,
+      composed: true,
+    }));
   }
 
   private openAdvisory(url: string): void {
@@ -221,7 +188,7 @@ export class VulnerabilitiesView extends LitElement {
           >
             ${pkg.SeverityLabel}
           </span>
-          <span class="package-name">${pkg.Id}</span>
+          <span class="package-name" @click=${() => this.selectPackage(pkg.Id)}>${pkg.Id}</span>
           <a
             class="advisory-link"
             href=${pkg.AdvisoryUrl}

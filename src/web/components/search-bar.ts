@@ -1,7 +1,10 @@
 import { LitElement, css, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import codicon from "@/web/styles/codicon.css";
+import { sharedStyles } from "@/web/styles/shared.css";
 import { configuration, hostApi } from "../registrations";
+import type { DropdownOption } from "./dropdown";
+import "./dropdown";
 import lodash from "lodash";
 
 const styles = css`
@@ -27,16 +30,11 @@ const styles = css`
         padding: 4px 8px;
         font-size: inherit;
         font-family: inherit;
+        outline: none;
       }
 
-      .icon-btn {
-        background: transparent;
-        border: none;
-        color: var(--vscode-icon-foreground);
-        cursor: pointer;
-        padding: 2px;
-        display: flex;
-        align-items: center;
+      .search-input:focus {
+        border-color: var(--vscode-focusBorder);
       }
 
       .checkbox-label {
@@ -51,15 +49,6 @@ const styles = css`
     .search-bar-right {
       display: flex;
       gap: 10px;
-
-      select {
-        background: var(--vscode-dropdown-background);
-        color: var(--vscode-dropdown-foreground);
-        border: 1px solid var(--vscode-dropdown-border);
-        padding: 4px;
-        font-size: inherit;
-        font-family: inherit;
-      }
     }
   }
 `;
@@ -75,7 +64,7 @@ export type FilterEvent = {
 
 @customElement("search-bar")
 export class SearchBar extends LitElement {
-  static styles = [codicon, styles];
+  static styles = [codicon, sharedStyles, styles];
 
   private delayedPackagesLoader = lodash.debounce(() => this.emitFilterChangedEvent(), 500);
   @state() prerelease: boolean = false;
@@ -117,14 +106,31 @@ export class SearchBar extends LitElement {
     this.delayedPackagesLoader();
   }
 
-  private selectSource(url: string): void {
-    this.selectedSourceUrl = url;
+  private selectSource(value: string): void {
+    this.selectedSourceUrl = value;
     this.emitFilterChangedEvent();
   }
 
   private sortChanged(value: string): void {
     this.sortBy = value as SortOption;
     this.emitFilterChangedEvent();
+  }
+
+  private get sortOptions(): DropdownOption[] {
+    return [
+      { value: "relevance", label: "Relevance" },
+      { value: "downloads", label: "Downloads" },
+      { value: "recent", label: "Recently Updated" },
+      { value: "name-asc", label: "Name A-Z" },
+    ];
+  }
+
+  private get sourceOptions(): DropdownOption[] {
+    const sources = configuration.Configuration?.Sources ?? [];
+    return [
+      { value: "", label: "All" },
+      ...sources.map((s) => ({ value: s.Url, label: s.Name })),
+    ];
   }
 
   setSearchQuery(query: string): void {
@@ -162,8 +168,6 @@ export class SearchBar extends LitElement {
   }
 
   render() {
-    const sources = configuration.Configuration?.Sources ?? [];
-
     return html`
       <div class="search-bar">
         <div class="search-bar-left">
@@ -187,29 +191,18 @@ export class SearchBar extends LitElement {
           </label>
         </div>
         <div class="search-bar-right">
-          <select
-            aria-label="Sort by"
+          <custom-dropdown
+            .options=${this.sortOptions}
             .value=${this.sortBy}
-            @change=${(e: Event) =>
-              this.sortChanged((e.target as HTMLSelectElement).value)}
-          >
-            <option value="relevance">Relevance</option>
-            <option value="downloads">Downloads</option>
-            <option value="recent">Recently Updated</option>
-            <option value="name-asc">Name A-Z</option>
-          </select>
-          <select
-            aria-label="Package source"
+            ariaLabel="Sort by"
+            @change=${(e: CustomEvent<string>) => this.sortChanged(e.detail)}
+          ></custom-dropdown>
+          <custom-dropdown
+            .options=${this.sourceOptions}
             .value=${this.selectedSourceUrl}
-            @change=${(e: Event) =>
-              this.selectSource((e.target as HTMLSelectElement).value)}
-          >
-            <option value="">All</option>
-            ${sources.map(
-              (source) =>
-                html`<option value=${source.Url}>${source.Name}</option>`
-            )}
-          </select>
+            ariaLabel="Package source"
+            @change=${(e: CustomEvent<string>) => this.selectSource(e.detail)}
+          ></custom-dropdown>
         </div>
       </div>
     `;

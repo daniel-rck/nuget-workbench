@@ -53,6 +53,7 @@ export type GetPackageDetailsRequest = SourceContext & {
 export type GetOutdatedPackagesRequest = CacheControl & {
   Prerelease: boolean;
   ProjectPaths?: string[];
+  SourceUrl?: string;
 };
 
 export type GetInconsistentPackagesRequest = {
@@ -156,10 +157,6 @@ export type BatchUpdateResponse = {
 export type GetConfigurationResponse = {
   Configuration: Configuration;
 };
-
-// Legacy response aliases (empty responses, used as generics in compat layer)
-export type UpdateStatusBarResponse = Record<string, never>;
-export type UpdateConfigurationResponse = Record<string, never>;
 
 // ============================================================
 // Wire Protocol (internal, over postMessage)

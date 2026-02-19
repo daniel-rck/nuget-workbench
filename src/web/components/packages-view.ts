@@ -7,14 +7,15 @@ import lodash from "lodash";
 import { hostApi, configuration } from "@/web/registrations";
 import codicon from "@/web/styles/codicon.css";
 import { scrollableBase } from "@/web/styles/base.css";
+import { sharedStyles } from "@/web/styles/shared.css";
 import { PackageViewModel, ProjectViewModel } from "../types";
 import type { FilterEvent } from "./search-bar";
 import type { SearchBar } from "./search-bar";
 import type { UpdatesView } from "./updates-view";
 import type { ConsolidateView } from "./consolidate-view";
 import type { VulnerabilitiesView } from "./vulnerabilities-view";
-import type { NugetOutputLog } from "./nuget-output-log";
-import type { NugetLicenseDialog } from "./nuget-license-dialog";
+import type { DropdownOption } from "./dropdown";
+import "./dropdown";
 
 type TabId = "browse" | "installed" | "updates" | "consolidate" | "vulnerabilities";
 
@@ -27,6 +28,7 @@ export class PackagesView extends LitElement {
   static styles = [
     codicon,
     scrollableBase,
+    sharedStyles,
     css`
       .container {
         display: flex;
@@ -77,33 +79,62 @@ export class PackagesView extends LitElement {
 
           .loader {
             align-self: center;
-            flex: 1;
+            margin: 10px 0;
           }
 
           .tab-bar {
             display: flex;
-            border-bottom: 1px solid var(--vscode-panelSection-border);
+            align-items: center;
+            gap: 2px;
+            padding: 4px 4px 0;
+            margin-bottom: 6px;
+          }
+
+          .tab-tree-toggle {
+            margin-right: 2px;
+
+            &.active {
+              color: var(--vscode-panelTitle-activeForeground);
+            }
           }
 
           .tab {
             background: transparent;
-            border: none;
+            border: 1px solid transparent;
             color: var(--vscode-foreground);
-            padding: 4px 12px;
+            padding: 3px 10px;
             font-size: 11px;
             cursor: pointer;
-            border-bottom: 2px solid transparent;
+            border-radius: 3px;
             opacity: 0.7;
           }
 
           .tab:hover {
             opacity: 1;
+            background-color: var(--vscode-toolbar-hoverBackground);
           }
 
           .tab.active {
             opacity: 1;
-            border-bottom-color: var(--vscode-panelTitle-activeBorder);
+            background-color: var(--vscode-toolbar-activeBackground, var(--vscode-list-activeSelectionBackground));
             color: var(--vscode-panelTitle-activeForeground);
+            border-color: var(--vscode-focusBorder);
+          }
+
+          .tab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 4px;
+            margin-left: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 8px;
+            background-color: var(--vscode-badge-background);
+            color: var(--vscode-badge-foreground);
+            line-height: 1;
           }
 
           .tab-content {
@@ -111,6 +142,10 @@ export class PackagesView extends LitElement {
             overflow: hidden;
             display: flex;
             margin-top: 6px;
+          }
+
+          .tab-content.hidden {
+            display: none;
           }
 
           .installed-packages {
@@ -127,9 +162,6 @@ export class PackagesView extends LitElement {
               margin-bottom: 3px;
             }
 
-            .loader {
-              margin: 10px 0px;
-            }
           }
         }
 
@@ -142,36 +174,87 @@ export class PackagesView extends LitElement {
             margin-top: 20px;
           }
 
-          .package-info {
-            padding: 3px;
-            margin-left: 2px;
-            margin-right: 3px;
+          .package-header-panel {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            align-items: flex-start;
             gap: 10px;
+            padding: 8px 6px;
+            border-bottom: 1px solid var(--vscode-panelSection-border);
 
-            .package-title {
-              font-size: 14px;
-              font-weight: bold;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              text-wrap: nowrap;
-
-              a {
-                text-decoration: none;
-                color: var(--vscode-editor-foreground);
-              }
-
-              .package-link-icon {
-                vertical-align: middle;
-                font-size: 12px;
-                margin-right: 3px;
-              }
+            .package-icon-large {
+              width: 32px;
+              height: 32px;
+              flex-shrink: 0;
             }
 
+            .package-header-info {
+              flex: 1;
+              min-width: 0;
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+
+              .package-title-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+
+                .package-title {
+                  font-size: 14px;
+                  font-weight: bold;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+
+                  a {
+                    text-decoration: none;
+                    color: var(--vscode-editor-foreground);
+                  }
+
+                  .package-link-icon {
+                    vertical-align: middle;
+                    font-size: 12px;
+                    margin-right: 3px;
+                  }
+                }
+
+                .source-badge {
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  font-size: 11px;
+                  color: var(--vscode-descriptionForeground);
+                  white-space: nowrap;
+                  flex-shrink: 0;
+
+                  .codicon {
+                    font-size: 12px;
+                  }
+                }
+              }
+
+              .package-authors-row {
+                font-size: 11px;
+                color: var(--vscode-descriptionForeground);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
+            }
+          }
+
+          .package-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px;
+
             .version-selector {
-              text-wrap: nowrap;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              white-space: nowrap;
               min-width: 128px;
             }
           }
@@ -194,38 +277,6 @@ export class PackagesView extends LitElement {
           }
         }
       }
-
-      select {
-        background: var(--vscode-dropdown-background);
-        color: var(--vscode-dropdown-foreground);
-        border: 1px solid var(--vscode-dropdown-border);
-        padding: 4px;
-      }
-
-      button.icon-btn {
-        background: transparent;
-        border: none;
-        color: var(--vscode-icon-foreground);
-        cursor: pointer;
-        padding: 2px;
-      }
-
-      .spinner {
-        display: inline-block;
-        border: 2px solid var(--vscode-progressBar-background);
-        border-top-color: transparent;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      .spinner.medium {
-        width: 16px;
-        height: 16px;
-      }
     `,
   ];
 
@@ -233,9 +284,6 @@ export class PackagesView extends LitElement {
   packagesPage: number = 0;
   packagesLoadingInProgress: boolean = false;
   private currentLoadPackageHash: string = "";
-  private updatesLoaded: boolean = false;
-  private consolidateLoaded: boolean = false;
-  private vulnerabilitiesLoaded: boolean = false;
 
   @state() activeTab: TabId = "browse";
   @state() projects: Array<ProjectViewModel> = [];
@@ -243,6 +291,9 @@ export class PackagesView extends LitElement {
   @state() selectedPackage: PackageViewModel | null = null;
   @state() packages: Array<PackageViewModel> = [];
   @state() projectsPackages: Array<PackageViewModel> = [];
+  @state() updatesCount: number | null = null;
+  @state() consolidateCount: number | null = null;
+  @state() vulnerabilitiesCount: number | null = null;
   @state() filters: FilterEvent = {
     Prerelease: true,
     Query: "",
@@ -251,38 +302,73 @@ export class PackagesView extends LitElement {
   };
   @state() noMorePackages: boolean = false;
   @state() packagesLoadingError: boolean = false;
+  @state() packagesLoadingErrorMessage: string = "";
   @state() selectedProjectPaths: string[] = [];
+  @state() showProjectTree: boolean = false;
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.filters.SourceUrl = "";
-    this.LoadPackages();
+    this.filters = {
+      ...this.filters,
+      SourceUrl: "",
+      Prerelease: configuration.Configuration?.Prerelease ?? false,
+    };
+    // LoadPackages is triggered by search-bar's connectedCallback emitting filter-changed
     this.LoadProjects();
   }
 
   firstUpdated(): void {
-    const projectTree = this.shadowRoot!.getElementById("project-tree")!;
-    const packages = this.shadowRoot!.getElementById("packages")!;
-    const projects = this.shadowRoot!.getElementById("projects")!;
-
-    this.splitter = Split([projectTree, packages, projects], {
-      sizes: [20, 45, 35],
-      minSize: [120, 200, 150],
-      gutterSize: 4,
-      gutter: (_index: number, direction) => {
-        const gutter = document.createElement("div");
-        const gutterNested = document.createElement("div");
-        gutter.className = `gutter gutter-${direction}`;
-        gutterNested.className = "gutter-nested";
-        gutter.appendChild(gutterNested);
-        return gutter;
-      },
-    });
+    this.initSplitter();
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.splitter?.destroy();
+  }
+
+  private initSplitter(): void {
+    this.splitter?.destroy();
+    this.splitter = null;
+
+    const packages = this.shadowRoot!.getElementById("packages")!;
+    const projects = this.shadowRoot!.getElementById("projects")!;
+
+    if (this.showProjectTree) {
+      const projectTree = this.shadowRoot!.getElementById("project-tree")!;
+      this.splitter = Split([projectTree, packages, projects], {
+        sizes: [20, 45, 35],
+        minSize: [120, 200, 150],
+        gutterSize: 4,
+        gutter: this.makeGutter,
+      });
+    } else {
+      this.splitter = Split([packages, projects], {
+        sizes: [55, 45],
+        minSize: [200, 150],
+        gutterSize: 4,
+        gutter: this.makeGutter,
+      });
+    }
+  }
+
+  private makeGutter(_index: number, direction: string): HTMLElement {
+    const gutter = document.createElement("div");
+    const gutterNested = document.createElement("div");
+    gutter.className = `gutter gutter-${direction}`;
+    gutterNested.className = "gutter-nested";
+    gutter.appendChild(gutterNested);
+    return gutter;
+  }
+
+  private toggleProjectTree(): void {
+    this.showProjectTree = !this.showProjectTree;
+    this.updatesCount = null;
+    this.consolidateCount = null;
+    this.vulnerabilitiesCount = null;
+    this.updateComplete.then(() => {
+      this.initSplitter();
+      this.reloadChildViews();
+    });
   }
 
   get CurrentSource(): Source | undefined {
@@ -317,8 +403,12 @@ export class PackagesView extends LitElement {
     );
   }
 
+  private get effectiveProjectPaths(): string[] {
+    return this.showProjectTree ? this.selectedProjectPaths : [];
+  }
+
   private get filteredProjects(): Array<ProjectViewModel> {
-    if (this.selectedProjectPaths.length === 0) return this.projects;
+    if (!this.showProjectTree || this.selectedProjectPaths.length === 0) return this.projects;
     return this.projects.filter((p) =>
       this.selectedProjectPaths.includes(p.Path)
     );
@@ -353,54 +443,75 @@ export class PackagesView extends LitElement {
 
   setTab(tab: TabId): void {
     this.activeTab = tab;
+  }
 
-    if (tab === "updates") {
-      const updatesView = this.shadowRoot?.querySelector(
-        "updates-view"
-      ) as UpdatesView | null;
-      if (updatesView && !this.updatesLoaded) {
-        this.updatesLoaded = true;
-        updatesView.LoadOutdatedPackages();
-      }
-    } else if (tab === "consolidate") {
-      const consolidateView = this.shadowRoot?.querySelector(
-        "consolidate-view"
-      ) as ConsolidateView | null;
-      if (consolidateView && !this.consolidateLoaded) {
-        this.consolidateLoaded = true;
-        consolidateView.LoadInconsistentPackages();
-      }
-    } else if (tab === "vulnerabilities") {
-      const vulnView = this.shadowRoot?.querySelector(
-        "vulnerabilities-view"
-      ) as VulnerabilitiesView | null;
-      if (vulnView && !this.vulnerabilitiesLoaded) {
-        this.vulnerabilitiesLoaded = true;
-        vulnView.LoadVulnerablePackages();
-      }
+  private async onChildPackageSelected(e: CustomEvent<{ packageId: string; sourceUrl?: string }>): Promise<void> {
+    const { packageId, sourceUrl } = e.detail;
+
+    // Check if we already have this package in projectsPackages (installed)
+    const existing = this.projectsPackages.find((p) => p.Id === packageId);
+    if (existing) {
+      await this.SelectPackage(existing);
+      return;
     }
+
+    // Check if we have it in browse packages
+    const browsePkg = this.packages.find((p) => p.Id === packageId);
+    if (browsePkg) {
+      await this.SelectPackage(browsePkg);
+      return;
+    }
+
+    // Create a new PackageViewModel with MissingDetails — SelectPackage will fetch details
+    const pkg = new PackageViewModel(
+      {
+        Id: packageId,
+        Name: packageId,
+        IconUrl: "",
+        Authors: [],
+        Description: "",
+        LicenseUrl: "",
+        ProjectUrl: "",
+        TotalDownloads: 0,
+        Verified: false,
+        Version: "",
+        InstalledVersion: "",
+        Versions: [],
+        Tags: [],
+        Registration: "",
+      },
+      "MissingDetails"
+    );
+    if (sourceUrl) pkg.SourceUrl = sourceUrl;
+    await this.SelectPackage(pkg);
   }
 
   setSearchQuery(query: string): void {
     this.setTab("browse");
-    const searchBar = this.shadowRoot?.querySelector("search-bar") as SearchBar | null;
-    searchBar?.setSearchQuery(query);
-  }
-
-  get outputLog(): NugetOutputLog | null {
-    return this.shadowRoot?.querySelector("nuget-output-log") as NugetOutputLog | null;
-  }
-
-  get licenseDialog(): NugetLicenseDialog | null {
-    return this.shadowRoot?.querySelector("nuget-license-dialog") as NugetLicenseDialog | null;
+    this.updateComplete.then(() => {
+      const searchBar = this.shadowRoot?.querySelector("search-bar") as SearchBar | null;
+      searchBar?.setSearchQuery(query);
+    });
   }
 
   private OnProjectSelectionChanged(paths: string[]): void {
     this.selectedProjectPaths = paths;
-    this.updatesLoaded = false;
-    this.consolidateLoaded = false;
-    this.vulnerabilitiesLoaded = false;
+    this.updatesCount = null;
+    this.consolidateCount = null;
+    this.vulnerabilitiesCount = null;
+    this.reloadChildViews();
     this.debouncedLoadProjectsPackages();
+  }
+
+  private reloadChildViews(): void {
+    this.updateComplete.then(() => {
+      const updates = this.shadowRoot?.querySelector("updates-view") as UpdatesView | null;
+      const consolidate = this.shadowRoot?.querySelector("consolidate-view") as ConsolidateView | null;
+      const vulnerabilities = this.shadowRoot?.querySelector("vulnerabilities-view") as VulnerabilitiesView | null;
+      updates?.LoadOutdatedPackages();
+      consolidate?.LoadInconsistentPackages();
+      vulnerabilities?.LoadVulnerablePackages();
+    });
   }
 
   private debouncedLoadProjectsPackages = lodash.debounce(() => {
@@ -491,6 +602,7 @@ export class PackagesView extends LitElement {
       const promises = this.projectsPackages.map(async (pkg) => {
         await this.UpdatePackage(pkg, forceReload);
         completed++;
+        this.projectsPackages = [...this.projectsPackages];
         hostApi.updateStatusBar({
           Percentage: (completed / total) * 100,
           Message: "Loading installed packages...",
@@ -498,7 +610,7 @@ export class PackagesView extends LitElement {
       });
       await Promise.allSettled(promises);
     } finally {
-      this.requestUpdate();
+      this.projectsPackages = [...this.projectsPackages];
       if (total > 0) {
         hostApi.updateStatusBar({ Percentage: null });
       }
@@ -541,9 +653,17 @@ export class PackagesView extends LitElement {
 
   async UpdatePackagesFilters(filters: FilterEvent): Promise<void> {
     const forceReload = this.filters.Prerelease !== filters.Prerelease;
+    const sourceChanged = this.filters.SourceUrl !== filters.SourceUrl;
     this.filters = filters;
-    await this.LoadPackages(false, forceReload);
-    await this.LoadProjectsPackages(forceReload);
+    await this.LoadPackages(false, forceReload || sourceChanged);
+    await this.LoadProjectsPackages(forceReload || sourceChanged);
+
+    if (sourceChanged) {
+      this.updatesCount = null;
+      this.consolidateCount = null;
+      this.vulnerabilitiesCount = null;
+      this.reloadChildViews();
+    }
   }
 
   async SelectPackage(
@@ -601,9 +721,10 @@ export class PackagesView extends LitElement {
   ): Promise<void> {
     await this.LoadPackages(false, forceReload);
     await this.LoadProjects(forceReload);
-    this.updatesLoaded = false;
-    this.consolidateLoaded = false;
-    this.vulnerabilitiesLoaded = false;
+    this.updatesCount = null;
+    this.consolidateCount = null;
+    this.vulnerabilitiesCount = null;
+    this.reloadChildViews();
   }
 
   async LoadPackages(
@@ -636,10 +757,15 @@ export class PackagesView extends LitElement {
 
     const result = await hostApi.getPackages(requestObject);
 
-    if (this.currentLoadPackageHash !== hash(buildRequest())) return;
+    if (this.currentLoadPackageHash !== hash(buildRequest())) {
+      // A newer request was started, discard this result
+      return;
+    }
 
     if (!result.ok) {
       this.packagesLoadingError = true;
+      this.packagesLoadingErrorMessage = result.error;
+      this.packagesLoadingInProgress = false;
     } else {
       const packagesViewModels = result.value.Packages.map(
         (x) => new PackageViewModel(x)
@@ -677,8 +803,8 @@ export class PackagesView extends LitElement {
       >
         ${this.packagesLoadingError
           ? html`<div class="error">
-              <span class="codicon codicon-error"></span> Failed to fetch
-              packages. See 'Webview Developer Tools' for more details
+              <span class="codicon codicon-error"></span>
+              ${this.packagesLoadingErrorMessage || "Failed to fetch packages"}
             </div>`
           : html`
               ${this.packages.map(
@@ -705,6 +831,7 @@ export class PackagesView extends LitElement {
             <package-row
               .showInstalledVersion=${true}
               .package=${pkg}
+              .revision=${pkg.Revision}
               @click=${() => this.SelectPackage(pkg)}
             ></package-row>
           `
@@ -713,45 +840,6 @@ export class PackagesView extends LitElement {
     `;
   }
 
-  private renderUpdatesTab(): unknown {
-    return html`
-      <updates-view
-        .prerelease=${this.filters.Prerelease}
-        .projectPaths=${this.selectedProjectPaths}
-      ></updates-view>
-    `;
-  }
-
-  private renderConsolidateTab(): unknown {
-    return html`
-      <consolidate-view
-        .projectPaths=${this.selectedProjectPaths}
-      ></consolidate-view>
-    `;
-  }
-
-  private renderVulnerabilitiesTab(): unknown {
-    return html`
-      <vulnerabilities-view
-        .projectPaths=${this.selectedProjectPaths}
-      ></vulnerabilities-view>
-    `;
-  }
-
-  private renderActiveTab(): unknown {
-    switch (this.activeTab) {
-      case "browse":
-        return this.renderBrowseTab();
-      case "installed":
-        return this.renderInstalledTab();
-      case "updates":
-        return this.renderUpdatesTab();
-      case "consolidate":
-        return this.renderConsolidateTab();
-      case "vulnerabilities":
-        return this.renderVulnerabilitiesTab();
-    }
-  }
 
   private renderPackageTitle(): unknown {
     const nugetUrl = this.NugetOrgPackageUrl;
@@ -764,35 +852,62 @@ export class PackagesView extends LitElement {
     return html`${this.selectedPackage?.Name}`;
   }
 
+  private get selectedSourceName(): string {
+    const sourceUrl = this.selectedPackage?.SourceUrl || this.filters.SourceUrl;
+    if (!sourceUrl) return "";
+    if (sourceUrl.startsWith(NUGET_ORG_PREFIX)) return "nuget.org";
+    const source = configuration.Configuration?.Sources.find((s) => s.Url === sourceUrl);
+    return source?.Name ?? "";
+  }
+
+  private get selectedPackageIconUrl(): string {
+    const url = this.selectedPackage?.IconUrl;
+    if (!url) return "https://nuget.org/Content/gallery/img/default-package-icon.svg";
+    return url;
+  }
+
   private renderDetailedPackage(): unknown {
+    const sourceName = this.selectedSourceName;
+
     return html`
-      <div class="package-info">
-        <span class="package-title"> ${this.renderPackageTitle()} </span>
+      <div class="package-header-panel">
+        <img
+          class="package-icon-large"
+          alt=""
+          src=${this.selectedPackageIconUrl}
+          @error=${(e: Event) => {
+            (e.target as HTMLImageElement).src = "https://nuget.org/Content/gallery/img/default-package-icon.svg";
+          }}
+        />
+        <div class="package-header-info">
+          <div class="package-title-row">
+            <span class="package-title">${this.renderPackageTitle()}</span>
+            ${sourceName
+              ? html`<span class="source-badge">
+                  <span class="codicon codicon-globe"></span>
+                  ${sourceName}
+                </span>`
+              : nothing}
+          </div>
+          ${this.selectedPackage?.Authors
+            ? html`<span class="package-authors-row">by ${this.selectedPackage.Authors}</span>`
+            : nothing}
+        </div>
+      </div>
+      <div class="package-actions-row">
         <div class="version-selector">
-          <select
+          <custom-dropdown
+            .options=${(this.selectedPackage?.Versions || []).map((v): DropdownOption => ({ value: v, label: v }))}
             .value=${this.selectedVersion}
-            @change=${(e: Event) => {
-              this.selectedVersion = (e.target as HTMLSelectElement).value;
-            }}
-          >
-            ${(this.selectedPackage?.Versions || []).map(
-              (v) => html`<option value=${v}>${v}</option>`
-            )}
-          </select>
+            ariaLabel="Package version"
+            @change=${(e: CustomEvent<string>) => { this.selectedVersion = e.detail; }}
+          ></custom-dropdown>
           <button class="icon-btn" @click=${() => this.LoadProjects()}>
             <span class="codicon codicon-refresh"></span>
           </button>
         </div>
       </div>
       <div class="projects-panel-container">
-        <package-details
-          .package=${this.selectedPackage}
-          .packageVersionUrl=${this.PackageVersionUrl}
-          .source=${this.selectedPackage?.SourceUrl || this.filters.SourceUrl}
-          .passwordScriptPath=${this.CurrentSource?.PasswordScriptPath}
-          .selectedVersion=${this.selectedVersion}
-        ></package-details>
-        <div class="separator"></div>
         ${this.projects.length > 0
           ? this.filteredProjects.map(
               (project) => html`
@@ -809,6 +924,14 @@ export class PackagesView extends LitElement {
           : html`<div class="no-projects">
               <span class="codicon codicon-info"></span> No projects found
             </div>`}
+        <div class="separator"></div>
+        <package-details
+          .package=${this.selectedPackage}
+          .packageVersionUrl=${this.PackageVersionUrl}
+          .source=${this.selectedPackage?.SourceUrl || this.filters.SourceUrl}
+          .passwordScriptPath=${this.CurrentSource?.PasswordScriptPath}
+          .selectedVersion=${this.selectedVersion}
+        ></package-details>
       </div>
     `;
   }
@@ -837,22 +960,27 @@ export class PackagesView extends LitElement {
   render(): unknown {
     return html`
       <div class="container">
-        <div class="col" id="project-tree">
-          <project-tree
-            .projects=${this.projects}
-            @selection-changed=${(e: CustomEvent<string[]>) =>
-              this.OnProjectSelectionChanged(e.detail)}
-          ></project-tree>
-        </div>
+        ${this.showProjectTree
+          ? html`<div class="col" id="project-tree">
+              <project-tree
+                .projects=${this.projects}
+                @selection-changed=${(e: CustomEvent<string[]>) =>
+                  this.OnProjectSelectionChanged(e.detail)}
+              ></project-tree>
+            </div>`
+          : nothing}
 
         <div class="col" id="packages">
-          <search-bar
-            @reload-invoked=${async (e: CustomEvent<boolean>) =>
-              await this.ReloadInvoked(e.detail)}
-            @filter-changed=${async (e: CustomEvent<FilterEvent>) =>
-              await this.UpdatePackagesFilters(e.detail)}
-          ></search-bar>
           <div class="tab-bar" role="tablist" @keydown=${(e: KeyboardEvent) => this.handleTabKeydown(e)}>
+            <button
+              class="icon-btn tab-tree-toggle ${this.showProjectTree ? "active" : ""}"
+              title="${this.showProjectTree ? "Hide project tree" : "Show project tree"}"
+              aria-label="${this.showProjectTree ? "Hide project tree" : "Show project tree"}"
+              aria-pressed="${this.showProjectTree}"
+              @click=${() => this.toggleProjectTree()}
+            >
+              <span class="codicon codicon-list-tree"></span>
+            </button>
             <button
               class="tab ${this.activeTab === "browse" ? "active" : ""}"
               role="tab"
@@ -878,7 +1006,9 @@ export class PackagesView extends LitElement {
               tabindex=${this.activeTab === "updates" ? 0 : -1}
               @click=${() => this.setTab("updates")}
             >
-              UPDATES
+              UPDATES${this.updatesCount !== null
+                ? html`<span class="tab-badge">${this.updatesCount}</span>`
+                : nothing}
             </button>
             <button
               class="tab ${this.activeTab === "consolidate" ? "active" : ""}"
@@ -887,7 +1017,9 @@ export class PackagesView extends LitElement {
               tabindex=${this.activeTab === "consolidate" ? 0 : -1}
               @click=${() => this.setTab("consolidate")}
             >
-              CONSOLIDATE
+              CONSOLIDATE${this.consolidateCount !== null
+                ? html`<span class="tab-badge">${this.consolidateCount}</span>`
+                : nothing}
             </button>
             <button
               class="tab ${this.activeTab === "vulnerabilities" ? "active" : ""}"
@@ -896,10 +1028,46 @@ export class PackagesView extends LitElement {
               tabindex=${this.activeTab === "vulnerabilities" ? 0 : -1}
               @click=${() => this.setTab("vulnerabilities")}
             >
-              VULNERABILITIES
+              VULNERABILITIES${this.vulnerabilitiesCount !== null
+                ? html`<span class="tab-badge">${this.vulnerabilitiesCount}</span>`
+                : nothing}
             </button>
           </div>
-          <div class="tab-content" role="tabpanel" aria-label="${this.activeTab} tab">${this.renderActiveTab()}</div>
+          <search-bar
+            @reload-invoked=${async (e: CustomEvent<boolean>) =>
+              await this.ReloadInvoked(e.detail)}
+            @filter-changed=${async (e: CustomEvent<FilterEvent>) =>
+              await this.UpdatePackagesFilters(e.detail)}
+          ></search-bar>
+          <div class="tab-content ${this.activeTab === "browse" ? "" : "hidden"}" role="tabpanel" aria-label="browse tab">
+            ${this.renderBrowseTab()}
+          </div>
+          <div class="tab-content ${this.activeTab === "installed" ? "" : "hidden"}" role="tabpanel" aria-label="installed tab">
+            ${this.renderInstalledTab()}
+          </div>
+          <div class="tab-content ${this.activeTab === "updates" ? "" : "hidden"}" role="tabpanel" aria-label="updates tab">
+            <updates-view
+              .prerelease=${this.filters.Prerelease}
+              .projectPaths=${this.effectiveProjectPaths}
+              .sourceUrl=${this.filters.SourceUrl}
+              @count-changed=${(e: CustomEvent<number>) => { this.updatesCount = e.detail; }}
+              @package-selected=${(e: CustomEvent) => this.onChildPackageSelected(e)}
+            ></updates-view>
+          </div>
+          <div class="tab-content ${this.activeTab === "consolidate" ? "" : "hidden"}" role="tabpanel" aria-label="consolidate tab">
+            <consolidate-view
+              .projectPaths=${this.effectiveProjectPaths}
+              @count-changed=${(e: CustomEvent<number>) => { this.consolidateCount = e.detail; }}
+              @package-selected=${(e: CustomEvent) => this.onChildPackageSelected(e)}
+            ></consolidate-view>
+          </div>
+          <div class="tab-content ${this.activeTab === "vulnerabilities" ? "" : "hidden"}" role="tabpanel" aria-label="vulnerabilities tab">
+            <vulnerabilities-view
+              .projectPaths=${this.effectiveProjectPaths}
+              @count-changed=${(e: CustomEvent<number>) => { this.vulnerabilitiesCount = e.detail; }}
+              @package-selected=${(e: CustomEvent) => this.onChildPackageSelected(e)}
+            ></vulnerabilities-view>
+          </div>
         </div>
 
         <div class="col" id="projects">

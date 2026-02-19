@@ -4,6 +4,7 @@ import type { PropertyValues } from "lit";
 import type { GetPackageDetailsRequest } from "@/common/rpc/types";
 import { PackageViewModel } from "../types";
 import codicon from "@/web/styles/codicon.css";
+import { sharedStyles } from "@/web/styles/shared.css";
 import { hostApi } from "../registrations";
 
 type DetailTab = "description" | "dependencies" | "versions";
@@ -12,26 +13,10 @@ type DetailTab = "description" | "dependencies" | "versions";
 export class PackageDetailsComponent extends LitElement {
   static styles = [
     codicon,
+    sharedStyles,
     css`
       .loader {
         margin: 0px auto;
-      }
-
-      .spinner {
-        display: inline-block;
-        border: 2px solid var(--vscode-progressBar-background);
-        border-top-color: transparent;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      .spinner.large {
-        width: 20px;
-        height: 20px;
       }
 
       .detail-tabs {

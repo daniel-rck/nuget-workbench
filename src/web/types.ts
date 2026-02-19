@@ -21,6 +21,7 @@ export class PackageViewModel {
   Selected: boolean = false;
   SourceUrl: string = "";
   AllowsUpdate: boolean = true;
+  Revision: number = 0;
 
   constructor(model: Package, status: PackageViewModelStatus = "Detailed") {
     this._authors = model.Authors;
@@ -55,6 +56,7 @@ export class PackageViewModel {
     this._tags = model.Tags;
     this.Model = model;
     if (sourceUrl) this.SourceUrl = sourceUrl;
+    this.Revision++;
   }
 
   get Authors() {
@@ -62,8 +64,6 @@ export class PackageViewModel {
       return this._authors.length ? this._authors.join(", ") : "";
     } else if (typeof this._authors === "string") {
       return this._authors;
-    } else {
-      console.log("Invalid type for _authors:", this._authors);
     }
     return "";
   }
@@ -73,8 +73,6 @@ export class PackageViewModel {
       return this._tags.length ? this._tags.join(", ") : "";
     } else if (typeof this._tags === "string") {
       return this._tags;
-    } else {
-      console.log("Invalid type for _tags:", this._tags);
     }
     return "";
   }

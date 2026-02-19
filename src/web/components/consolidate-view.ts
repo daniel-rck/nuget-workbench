@@ -1,8 +1,11 @@
 import { LitElement, css, html, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 
 import codicon from "@/web/styles/codicon.css";
+import type { DropdownOption } from "./dropdown";
+import "./dropdown";
 import { scrollableBase } from "@/web/styles/base.css";
+import { sharedStyles } from "@/web/styles/shared.css";
 import { hostApi } from "@/web/registrations";
 import { InconsistentPackageViewModel } from "../types";
 
@@ -11,63 +14,20 @@ export class ConsolidateView extends LitElement {
   static styles = [
     codicon,
     scrollableBase,
+    sharedStyles,
     css`
+      :host {
+        display: flex;
+        flex: 1;
+        width: 100%;
+      }
+
       .consolidate-container {
         display: flex;
         flex-direction: column;
         height: 100%;
+        width: 100%;
         overflow: hidden;
-
-        .toolbar {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 4px;
-          margin-bottom: 6px;
-
-          .status-text {
-            font-size: 12px;
-            color: var(--vscode-descriptionForeground);
-            flex: 1;
-          }
-
-          .toolbar-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-        }
-
-        .loading {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          margin-top: 32px;
-          color: var(--vscode-descriptionForeground);
-          font-size: 12px;
-        }
-
-        .empty {
-          display: flex;
-          gap: 6px;
-          justify-content: center;
-          margin-top: 32px;
-          color: var(--vscode-descriptionForeground);
-        }
-
-        .error {
-          display: flex;
-          gap: 4px;
-          justify-content: center;
-          margin-top: 32px;
-          color: var(--vscode-errorForeground);
-        }
-
-        .package-list {
-          overflow-y: auto;
-          flex: 1;
-        }
 
         .inconsistent-row {
           padding: 6px;
@@ -89,6 +49,11 @@ export class ConsolidateView extends LitElement {
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
+              cursor: pointer;
+            }
+
+            .package-name:hover {
+              text-decoration: underline;
             }
 
             .cpm-badge {
@@ -136,54 +101,6 @@ export class ConsolidateView extends LitElement {
           }
         }
       }
-
-      button {
-        background: var(--vscode-button-background);
-        color: var(--vscode-button-foreground);
-        border: none;
-        padding: 4px 12px;
-        cursor: pointer;
-      }
-
-      button.icon-btn {
-        background: transparent;
-        border: none;
-        color: var(--vscode-icon-foreground);
-        cursor: pointer;
-        padding: 2px;
-      }
-
-      select {
-        background: var(--vscode-dropdown-background);
-        color: var(--vscode-dropdown-foreground);
-        border: 1px solid var(--vscode-dropdown-border);
-        padding: 4px;
-      }
-
-      .spinner {
-        display: inline-block;
-        border: 2px solid var(--vscode-progressBar-background);
-        border-top-color: transparent;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      .spinner.small {
-        width: 12px;
-        height: 12px;
-      }
-      .spinner.medium {
-        width: 16px;
-        height: 16px;
-      }
-      .spinner.large {
-        width: 20px;
-        height: 20px;
-      }
     `,
   ];
 
@@ -192,7 +109,17 @@ export class ConsolidateView extends LitElement {
   @state() isConsolidating: boolean = false;
   @state() hasError: boolean = false;
   @state() statusText: string = "";
-  @state() projectPaths: string[] = [];
+  @property({ attribute: false }) projectPaths: string[] = [];
+
+  private loaded = false;
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (!this.loaded) {
+      this.loaded = true;
+      this.LoadInconsistentPackages();
+    }
+  }
 
   async LoadInconsistentPackages(): Promise<void> {
     this.isLoading = true;
@@ -211,6 +138,11 @@ export class ConsolidateView extends LitElement {
         this.packages = (result.value.Packages ?? []).map(
           (p) => new InconsistentPackageViewModel(p)
         );
+        this.dispatchEvent(new CustomEvent<number>("count-changed", {
+          detail: this.packages.length,
+          bubbles: true,
+          composed: true,
+        }));
         this.statusText =
           this.packages.length > 0
             ? `${this.packages.length} package${this.packages.length !== 1 ? "s" : ""} with inconsistent versions`
@@ -221,6 +153,14 @@ export class ConsolidateView extends LitElement {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  private selectPackage(packageId: string): void {
+    this.dispatchEvent(new CustomEvent("package-selected", {
+      detail: { packageId },
+      bubbles: true,
+      composed: true,
+    }));
   }
 
   private async consolidateSingle(pkg: InconsistentPackageViewModel): Promise<void> {
@@ -236,6 +176,11 @@ export class ConsolidateView extends LitElement {
       });
 
       this.packages = this.packages.filter((p) => p.Id !== pkg.Id);
+      this.dispatchEvent(new CustomEvent<number>("count-changed", {
+        detail: this.packages.length,
+        bubbles: true,
+        composed: true,
+      }));
       this.statusText =
         this.packages.length > 0
           ? `${this.packages.length} package${this.packages.length !== 1 ? "s" : ""} with inconsistent versions`
@@ -268,25 +213,22 @@ export class ConsolidateView extends LitElement {
     return html`
       <div class="inconsistent-row ${pkg.IsConsolidating ? "consolidating" : ""}">
         <div class="row-header">
-          <span class="package-name">${pkg.Id}</span>
+          <span class="package-name" @click=${() => this.selectPackage(pkg.Id)}>${pkg.Id}</span>
           ${pkg.CpmManaged ? html`<span class="cpm-badge">CPM Override</span>` : nothing}
           <div class="row-actions">
             ${pkg.IsConsolidating
               ? html`<span class="spinner medium"></span>`
               : html`
-                  <select
+                  <custom-dropdown
                     class="version-dropdown"
-                    aria-label="Target version for ${pkg.Id}"
+                    ariaLabel="Target version for ${pkg.Id}"
+                    .options=${pkg.Versions.map((v): DropdownOption => ({ value: v.Version, label: v.Version }))}
                     .value=${pkg.TargetVersion}
-                    @change=${(e: Event) => {
-                      pkg.TargetVersion = (e.target as HTMLSelectElement).value;
+                    @change=${(e: CustomEvent<string>) => {
+                      pkg.TargetVersion = e.detail;
                       this.requestUpdate();
                     }}
-                  >
-                    ${pkg.Versions.map(
-                      (v) => html`<option value=${v.Version}>${v.Version}</option>`
-                    )}
-                  </select>
+                  ></custom-dropdown>
                   <button class="icon-btn" aria-label="Consolidate ${pkg.Id}" title="Consolidate ${pkg.Id}" @click=${() => this.consolidateSingle(pkg)}>
                     <span class="codicon codicon-arrow-circle-up"></span>
                   </button>
@@ -319,6 +261,7 @@ export class ConsolidateView extends LitElement {
             ${this.packages.length > 0
               ? html`
                   <button
+                    class="primary-btn"
                     ?disabled=${this.isConsolidating}
                     @click=${() => this.consolidateAll()}
                   >

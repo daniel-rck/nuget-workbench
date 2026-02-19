@@ -36,6 +36,52 @@ import NuGetConfigResolver from "./utilities/nuget-config-resolver";
 import TaskExecutor from "./utilities/task-executor";
 import StatusBarUtils from "./utilities/status-bar-utils";
 import { Logger } from "../common/logger";
+import { AxiosError } from "axios";
+
+function extractResponseDetail(data: unknown): string {
+  if (!data) return "";
+  if (typeof data === "string") return data;
+  if (typeof data === "object" && data !== null) {
+    const obj = data as Record<string, unknown>;
+    // GitLab: { error: "invalid_token", error_description: "Token is expired..." }
+    if (obj.error_description) return String(obj.error_description);
+    if (obj.error && typeof obj.error === "string") return String(obj.error);
+    if (obj.message) return String(obj.message);
+  }
+  return "";
+}
+
+function formatApiError(err: unknown): string {
+  if (err instanceof AxiosError) {
+    const status = err.response?.status;
+    const url = err.config?.url ?? "unknown URL";
+    const detail = extractResponseDetail(err.response?.data);
+    const suffix = detail ? ` (${detail})` : "";
+    if (status === 401) {
+      return `Authentication failed (401) for ${url}.${suffix || " Check your credentials or access token."}`;
+    }
+    if (status === 403) {
+      return `Access denied (403) for ${url}.${suffix || " Your token may lack the required permissions."}`;
+    }
+    if (status === 404) {
+      return `Source not found (404): ${url}${suffix}`;
+    }
+    if (status) {
+      return `HTTP ${status} from ${url}: ${err.message}${suffix}`;
+    }
+    if (err.code === "ECONNREFUSED" || err.code === "ENOTFOUND") {
+      return `Cannot connect to ${url} (${err.code}). Check your network or source URL.`;
+    }
+    return `Network error for ${url}: ${err.message}`;
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  if (typeof err === "object" && err !== null && "message" in err) {
+    return String((err as { message: unknown }).message);
+  }
+  return String(err);
+}
 
 export function createHostAPI(): HostAPI {
   return {
@@ -136,10 +182,10 @@ export function createHostAPI(): HostAPI {
         );
         Logger.info(`getPackages: Successfully fetched ${packages.data.length} packages`);
         return ok({ Packages: packages.data });
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (err: unknown) {
         Logger.error(`getPackages: Failed`, err);
-        return fail(`Failed to fetch packages: ${message}`);
+        const detail = formatApiError(err);
+        return fail(detail);
       } finally {
         StatusBarUtils.hide();
       }
@@ -213,7 +259,6 @@ export function createHostAPI(): HostAPI {
 
       try {
         if (request.Type === "UPDATE") {
-          await executeRemovePackage(request.PackageId, request.ProjectPath);
           await executeAddPackage(request.PackageId, request.ProjectPath, request.Version, skipRestore, request.SourceUrl);
         } else if (request.Type === "UNINSTALL") {
           await executeRemovePackage(request.PackageId, request.ProjectPath);
@@ -323,7 +368,11 @@ export function createHostAPI(): HostAPI {
 
       try {
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        const sources = await NuGetConfigResolver.GetSourcesAndDecodePasswords(workspaceRoot);
+        let sources = await NuGetConfigResolver.GetSourcesAndDecodePasswords(workspaceRoot);
+
+        if (request.SourceUrl) {
+          sources = sources.filter((s) => s.Url === request.SourceUrl);
+        }
 
         if (sources.length === 0) {
           return ok({ Packages: [] });
@@ -432,7 +481,6 @@ export function createHostAPI(): HostAPI {
             const skipRestore =
               !!vscode.workspace.getConfiguration("NugetWorkbench").get<string>("skipRestore") && !isCpm;
 
-            await executeRemovePackage(update.PackageId, projectPath);
             await executeAddPackage(update.PackageId, projectPath, update.Version, skipRestore);
           }
 
@@ -665,7 +713,6 @@ export function createHostAPI(): HostAPI {
           const skipRestore =
             !!vscode.workspace.getConfiguration("NugetWorkbench").get<string>("skipRestore") && !isCpm;
 
-          await executeRemovePackage(request.PackageId, projectPath);
           await executeAddPackage(request.PackageId, projectPath, request.TargetVersion, skipRestore);
         }
 

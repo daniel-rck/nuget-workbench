@@ -9,7 +9,6 @@ import "./components/package-row";
 import "./components/project-row";
 import "./components/settings-view";
 import "./components/package-details";
-import "./components/expandable-container";
 import "./components/search-bar";
 import "./components/updates-view";
 import "./components/consolidate-view";

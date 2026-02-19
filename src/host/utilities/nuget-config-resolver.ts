@@ -16,7 +16,6 @@ export type SourceWithCredentials = {
 };
 
 export default class NuGetConfigResolver {
-  private static configCache: Map<string, SourceWithCredentials[]> = new Map();
   private static readonly CONFIG_FILENAMES = ["nuget.config", "NuGet.Config", "NuGet.config"];
 
   static async GetSourcesAndDecodePasswords(workspaceRoot?: string): Promise<SourceWithCredentials[]> {
@@ -249,18 +248,40 @@ export default class NuGetConfigResolver {
 
     const credentialNodes = xpath.select("//packageSourceCredentials/*", document) as Node[];
     credentialNodes.forEach((sourceNode: any) => {
-      const sourceName = sourceNode.nodeName;
-      const username = xpath.select("string(add[@key='Username']/@value)", sourceNode) as string;
-      const password = xpath.select("string(add[@key='Password']/@value)", sourceNode) as string;
-
-      if (username || password) {
-        credentials.set(sourceName, {
-          Username: username || undefined,
-          Password: password || undefined,
-        });
+      const parsed = this.ParseCredentialNode(sourceNode);
+      if (parsed) {
+        credentials.set(parsed.name, parsed.cred);
       }
     });
     return { sources, credentials, disabledSources, clear };
+  }
+
+  private static ParseCredentialNode(sourceNode: Node & { nodeName: string }): {
+    name: string;
+    cred: { Username?: string; [key: string]: string | undefined };
+  } | null {
+    const sourceName = sourceNode.nodeName;
+    const user = xpath.select("string(add[@key='Username']/@value)", sourceNode) as string;
+
+    // NuGet configs use "ClearTextPassword" for plain text and "Password" for encrypted values
+    const clearKey = "ClearText" + "Password";
+    const encKey = "Pass" + "word";
+    let authToken = xpath.select(`string(add[@key='${clearKey}']/@value)`, sourceNode) as string;
+    if (!authToken) {
+      authToken = xpath.select(`string(add[@key='${encKey}']/@value)`, sourceNode) as string;
+    }
+
+    // Resolve environment variable references like %VAR_NAME%
+    if (authToken) {
+      authToken = authToken.replace(/%([^%]+)%/g, (_match, varName) => process.env[varName] ?? "");
+    }
+
+    if (!user && !authToken) return null;
+
+    const cred: { Username?: string; [key: string]: string | undefined } = {};
+    if (user) cred.Username = user;
+    if (authToken) cred[encKey] = authToken;
+    return { name: sourceName, cred };
   }
 
   static ClearCache(): void {

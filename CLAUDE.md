@@ -88,6 +88,15 @@ Run a single test file by modifying `.vscode-test.mjs` config or using the test 
 - **Commit messages**: English, conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 - **Language**: ALL written content must be in English — code comments, changelogs, documentation, commit messages, JSDoc, TODO comments. No German in the codebase.
 
+## Demo GIF
+
+The README references `docs/images/demo.gif`. To update it after UI changes:
+
+1. Run the extension in debug mode (`F5`)
+2. Use [ScreenToGif](https://www.screentogif.com/) or ShareX to record the VS Code window
+3. Walk through: Browse -> select package -> Installed -> Updates -> Consolidate -> use dropdowns
+4. Export as `docs/images/demo.gif` (max 5MB, 800px wide, 15fps)
+
 ## Technology Stack
 
 - **UI Framework**: Lit 3.x (LitElement)

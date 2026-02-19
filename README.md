@@ -2,8 +2,41 @@
 
 A comprehensive NuGet package management extension for Visual Studio Code with vulnerability scanning, multi-project support, and version consolidation.
 
-![VS Code](https://img.shields.io/badge/VS%20Code-1.87%2B-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/nuget-workbench.nuget-workbench?label=Marketplace&color=blue)](https://marketplace.visualstudio.com/items?itemName=nuget-workbench.nuget-workbench)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/nuget-workbench.nuget-workbench)](https://marketplace.visualstudio.com/items?itemName=nuget-workbench.nuget-workbench)
+[![GitHub Release](https://img.shields.io/github/v/release/nuget-workbench/nuget-workbench-vscode)](https://github.com/nuget-workbench/nuget-workbench-vscode/releases)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![VS Code](https://img.shields.io/badge/VS%20Code-1.87%2B-grey)](https://code.visualstudio.com/)
+
+## Requirements
+
+- Visual Studio Code 1.87+
+- A workspace containing `.csproj`, `.fsproj`, or `.sln` files
+- .NET SDK installed (for package operations)
+
+## Getting Started
+
+1. Open a workspace with .NET projects (`.csproj` / `.sln`)
+2. The extension activates automatically — open the **NuGet** panel in the bottom panel
+3. Browse, search and install packages from the **Browse** tab
+4. Check for updates in the **Updates** tab
+5. Scan for known vulnerabilities in the **Vulnerabilities** tab
+
+## Screenshots
+
+![Demo](docs/images/demo.gif)
+
+![Main UI](docs/images/screenshot-browse.png)
+*Browse, install and update NuGet packages across multiple projects*
+
+![Updates](docs/images/screenshot-updates.png)
+*See all outdated packages at a glance with one-click update*
+
+![Vulnerability Scanning](docs/images/screenshot-vulnerabilities.png)
+*Color-coded vulnerability severity with links to security advisories*
+
+![Version Consolidation](docs/images/screenshot-consolidate.png)
+*Identify and fix version inconsistencies across projects in one click*
 
 ## Features
 

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NuGet Workbench</title>
+  <link rel="stylesheet" href="/dist/web.css" />
+  <style>
+    :root {
+      --vscode-foreground: #cccccc;
+      --vscode-disabledForeground: #cccccc80;
+      --vscode-errorForeground: #f48771;
+      --vscode-descriptionForeground: #9d9d9d;
+      --vscode-icon-foreground: #c5c5c5;
+      --vscode-focusBorder: #007fd4;
+      --vscode-selection-background: #264f78;
+
+      --vscode-editor-background: #1e1e1e;
+      --vscode-editor-foreground: #d4d4d4;
+
+      --vscode-panel-background: #252526;
+      --vscode-panel-border: #3a3a3a;
+      --vscode-panelSection-border: #3a3a3a;
+      --vscode-panelTitle-activeBorder: #007acc;
+      --vscode-panelTitle-activeForeground: #e7e7e7;
+      --vscode-panelTitle-inactiveForeground: #e7e7e799;
+
+      --vscode-progressBar-background: #0e70c0;
+
+      --vscode-sash-hoverBorder: #007fd4;
+
+      --vscode-dropdown-background: #3c3c3c;
+      --vscode-dropdown-listBackground: #3c3c3c;
+      --vscode-dropdown-border: #3c3c3c;
+      --vscode-dropdown-foreground: #f0f0f0;
+
+      --vscode-input-background: #3c3c3c;
+      --vscode-input-border: #3c3c3c;
+      --vscode-input-foreground: #cccccc;
+      --vscode-input-placeholderForeground: #a6a6a6;
+
+      --vscode-button-background: #0e639c;
+      --vscode-button-foreground: #ffffff;
+      --vscode-button-hoverBackground: #1177bb;
+      --vscode-button-secondaryBackground: #3a3d41;
+      --vscode-button-secondaryForeground: #ffffff;
+      --vscode-button-secondaryHoverBackground: #45494e;
+
+      --vscode-badge-background: #4d4d4d;
+      --vscode-badge-foreground: #cccccc;
+
+      --vscode-checkbox-background: #3c3c3c;
+      --vscode-checkbox-foreground: #f0f0f0;
+      --vscode-checkbox-border: #3c3c3c;
+
+      --vscode-list-activeSelectionBackground: #094771;
+      --vscode-list-activeSelectionForeground: #ffffff;
+      --vscode-list-hoverBackground: #2a2d2e;
+      --vscode-list-inactiveSelectionBackground: #37373d;
+
+      --vscode-charts-red: #f14c4c;
+      --vscode-charts-orange: #d18616;
+      --vscode-charts-yellow: #cca700;
+      --vscode-charts-green: #89d185;
+      --vscode-charts-blue: #007acc;
+      --vscode-charts-purple: #bc8cff;
+
+      --vscode-scrollbarSlider-background: #79797966;
+      --vscode-scrollbarSlider-hoverBackground: #646464b3;
+      --vscode-scrollbarSlider-activeBackground: #bfbfbf66;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-foreground);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 13px;
+      /* Override the 20px left padding from web.css body rule */
+      padding: 0 !important;
+    }
+
+    nuget-workbench {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <script src="/mock-api.js"></script>
+  <nuget-workbench></nuget-workbench>
+  <script type="module" src="/dist/web.js"></script>
+</body>
+</html>

@@ -60,7 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("nuget-workbench.reportProblem", async () => {
+    vscode.commands.registerCommand("nugetWorkbench.reportProblem", async () => {
       vscode.env.openExternal(
         vscode.Uri.parse("https://github.com/nuget-workbench/nuget-workbench-vscode/issues/new")
       );
@@ -68,7 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("nuget-workbench.openSettings", () => {
+    vscode.commands.registerCommand("nugetWorkbench.openSettings", () => {
       provider.sendNavigateToRoute("SETTINGS");
     })
   );

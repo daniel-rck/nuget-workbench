@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 (2026-02-19)
+
+- fix: Tab sub-views (Updates, Consolidate, Vulnerabilities) now load reliably — `setTab()` was
+  calling `querySelector()` synchronously before Lit rendered the new element (microtask timing bug)
+- feat: Tab badges showing result counts on Updates, Consolidate, and Vulnerabilities tabs
+- fix: Selected package row now uses the active selection highlight color instead of the inactive one
+- ux: Search bar is now hidden on the Updates, Consolidate, and Vulnerabilities tabs where it is not relevant
+- breaking: Renamed commands `nuget-workbench.openSettings` and `nuget-workbench.reportProblem`
+  to `nugetWorkbench.openSettings` and `nugetWorkbench.reportProblem` for consistency with other command IDs
+- chore: Moved screenshot tooling from `screenshot-harness/` to `tools/`
 
 ## 1.0.0 (2026-02-18)
 

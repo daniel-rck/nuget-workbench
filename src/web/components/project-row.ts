@@ -1,6 +1,7 @@
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import codicon from "@/web/styles/codicon.css";
+import { sharedStyles } from "@/web/styles/shared.css";
 import { hostApi } from "../registrations";
 import { ProjectPackageViewModel, ProjectViewModel } from "../types";
 import type { UpdateProjectRequest } from "@/common/rpc/types";
@@ -33,38 +34,15 @@ const styles = css`
       align-items: center;
 
       .spinner {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
         margin: 3px;
-        border: 2px solid var(--vscode-progressBar-background);
-        border-top-color: transparent;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
       }
-
-      .icon-btn {
-        background: transparent;
-        border: none;
-        color: var(--vscode-icon-foreground);
-        cursor: pointer;
-        padding: 2px;
-        display: flex;
-        align-items: center;
-      }
-    }
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
     }
   }
 `;
 
 @customElement("project-row")
 export class ProjectRow extends LitElement {
-  static styles = [codicon, styles];
+  static styles = [codicon, sharedStyles, styles];
 
   @property({ type: Object }) project!: ProjectViewModel;
   @property() packageId!: string;
@@ -116,7 +94,7 @@ export class ProjectRow extends LitElement {
 
   private renderActions() {
     if (this.loaders.get(this.packageId) === true) {
-      return html`<span class="spinner" role="status" aria-label="Loading"></span>`;
+      return html`<span class="spinner medium" role="status" aria-label="Loading"></span>`;
     }
 
     const pkg = this.projectPackage;

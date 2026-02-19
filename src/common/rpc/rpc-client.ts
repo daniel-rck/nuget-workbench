@@ -1,4 +1,4 @@
-import type { HostAPI, RpcRequest, RpcResponse, RPC_TIMEOUT_MS } from "./types";
+import type { HostAPI, RpcRequest, RpcResponse } from "./types";
 import type { Result } from "./result";
 import { fail } from "./result";
 

@@ -1,179 +1,59 @@
 import { LitElement, css, html, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 
 import codicon from "@/web/styles/codicon.css";
 import { scrollableBase } from "@/web/styles/base.css";
+import { sharedStyles } from "@/web/styles/shared.css";
 import { hostApi } from "@/web/registrations";
-import { OutdatedPackageViewModel } from "../types";
+import { OutdatedPackageViewModel, PackageViewModel } from "../types";
+import "./package-row";
 
 @customElement("updates-view")
 export class UpdatesView extends LitElement {
   static styles = [
     codicon,
     scrollableBase,
+    sharedStyles,
     css`
+      :host {
+        display: flex;
+        flex: 1;
+        width: 100%;
+      }
+
       .updates-container {
         display: flex;
         flex-direction: column;
         height: 100%;
+        width: 100%;
         overflow: hidden;
-
-        .toolbar {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 4px;
-          margin-bottom: 6px;
-
-          .status-text {
-            font-size: 12px;
-            color: var(--vscode-descriptionForeground);
-            flex: 1;
-          }
-
-          .toolbar-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-        }
-
-        .loading {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          margin-top: 32px;
-          color: var(--vscode-descriptionForeground);
-          font-size: 12px;
-        }
-
-        .empty {
-          display: flex;
-          gap: 6px;
-          justify-content: center;
-          margin-top: 32px;
-          color: var(--vscode-descriptionForeground);
-        }
-
-        .error {
-          display: flex;
-          gap: 4px;
-          justify-content: center;
-          margin-top: 32px;
-          color: var(--vscode-errorForeground);
-        }
-
-        .package-list {
-          overflow-y: auto;
-          flex: 1;
-        }
 
         .outdated-row {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          padding: 4px 6px;
-          gap: 8px;
-          cursor: default;
-
-          &:hover {
-            background-color: var(--vscode-list-hoverBackground);
-          }
+          gap: 4px;
+          padding: 0 4px 0 2px;
+          border-bottom: 1px solid var(--vscode-panelSection-border);
 
           &.updating {
             opacity: 0.6;
           }
 
-          .row-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            overflow: hidden;
+          .row-checkbox {
+            flex-shrink: 0;
+          }
+
+          package-row {
             flex: 1;
+            min-width: 0;
           }
 
-          .package-info {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-
-            .package-name {
-              font-weight: bold;
-              font-size: 13px;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            }
-
-            .version-info {
-              display: flex;
-              align-items: center;
-              gap: 4px;
-              font-size: 11px;
-
-              .old-version {
-                color: var(--vscode-descriptionForeground);
-              }
-
-              .codicon {
-                font-size: 10px;
-                color: var(--vscode-descriptionForeground);
-              }
-
-              .new-version {
-                color: var(--vscode-charts-green);
-              }
-            }
-
-            .project-count {
-              font-size: 11px;
-              color: var(--vscode-descriptionForeground);
-            }
-          }
-
-          .row-right {
+          .row-actions {
             display: flex;
             align-items: center;
+            flex-shrink: 0;
           }
         }
-      }
-
-      button {
-        background: var(--vscode-button-background);
-        color: var(--vscode-button-foreground);
-        border: none;
-        padding: 4px 12px;
-        cursor: pointer;
-      }
-
-      button.icon-btn {
-        background: transparent;
-        border: none;
-        color: var(--vscode-icon-foreground);
-        cursor: pointer;
-        padding: 2px;
-      }
-
-      .spinner {
-        display: inline-block;
-        border: 2px solid var(--vscode-progressBar-background);
-        border-top-color: transparent;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      .spinner.medium {
-        width: 16px;
-        height: 16px;
-      }
-      .spinner.large {
-        width: 20px;
-        height: 20px;
       }
     `,
   ];
@@ -182,10 +62,21 @@ export class UpdatesView extends LitElement {
   @state() isLoading: boolean = false;
   @state() isUpdating: boolean = false;
   @state() hasError: boolean = false;
-  @state() prerelease: boolean = false;
+  @property({ type: Boolean }) prerelease: boolean = false;
   @state() statusText: string = "";
   @state() loadingText: string = "Checking for updates...";
-  @state() projectPaths: string[] = [];
+  @property({ attribute: false }) projectPaths: string[] = [];
+  @property() sourceUrl: string = "";
+
+  private loaded = false;
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (!this.loaded) {
+      this.loaded = true;
+      this.LoadOutdatedPackages();
+    }
+  }
 
   async LoadOutdatedPackages(): Promise<void> {
     this.isLoading = true;
@@ -197,6 +88,7 @@ export class UpdatesView extends LitElement {
       const result = await hostApi.getOutdatedPackages({
         Prerelease: this.prerelease,
         ProjectPaths: this.projectPaths.length > 0 ? this.projectPaths : undefined,
+        SourceUrl: this.sourceUrl || undefined,
       });
 
       if (!result.ok) {
@@ -207,6 +99,11 @@ export class UpdatesView extends LitElement {
           (p) => new OutdatedPackageViewModel(p)
         );
         this.packages.forEach((p) => (p.Selected = true));
+        this.dispatchEvent(new CustomEvent<number>("count-changed", {
+          detail: this.packages.length,
+          bubbles: true,
+          composed: true,
+        }));
         this.statusText =
           this.packages.length > 0
             ? `${this.packages.length} update${this.packages.length !== 1 ? "s" : ""} available`
@@ -233,6 +130,11 @@ export class UpdatesView extends LitElement {
         ],
       });
       this.packages = this.packages.filter((p) => p.Id !== pkg.Id);
+      this.dispatchEvent(new CustomEvent<number>("count-changed", {
+        detail: this.packages.length,
+        bubbles: true,
+        composed: true,
+      }));
       this.statusText =
         this.packages.length > 0
           ? `${this.packages.length} update${this.packages.length !== 1 ? "s" : ""} available`
@@ -268,33 +170,49 @@ export class UpdatesView extends LitElement {
     }
   }
 
+  private toPackageViewModel(pkg: OutdatedPackageViewModel): PackageViewModel {
+    return new PackageViewModel({
+      Id: pkg.Id,
+      Name: pkg.Id,
+      IconUrl: "",
+      Authors: [],
+      Description: "",
+      LicenseUrl: "",
+      ProjectUrl: "",
+      TotalDownloads: 0,
+      Verified: false,
+      Version: pkg.LatestVersion,
+      InstalledVersion: pkg.InstalledVersion,
+      Versions: [],
+      Tags: [],
+      Registration: "",
+    }, "Detailed");
+  }
+
   private renderPackageRow(pkg: OutdatedPackageViewModel): unknown {
     return html`
       <div class="outdated-row ${pkg.IsUpdating ? "updating" : ""}">
-        <div class="row-left">
-          <input
-            type="checkbox"
-            aria-label="Select ${pkg.Id} for update"
-            .checked=${pkg.Selected}
-            ?disabled=${pkg.IsUpdating}
-            @change=${(e: Event) => {
-              pkg.Selected = (e.target as HTMLInputElement).checked;
-              this.requestUpdate();
-            }}
-          />
-          <div class="package-info">
-            <span class="package-name">${pkg.Id}</span>
-            <span class="version-info">
-              <span class="old-version">${pkg.InstalledVersion}</span>
-              <span class="codicon codicon-arrow-right"></span>
-              <span class="new-version">${pkg.LatestVersion}</span>
-            </span>
-            <span class="project-count"
-              >${pkg.Projects.length} project${pkg.Projects.length !== 1 ? "s" : ""}</span
-            >
-          </div>
-        </div>
-        <div class="row-right">
+        <input
+          class="row-checkbox"
+          type="checkbox"
+          aria-label="Select ${pkg.Id} for update"
+          .checked=${pkg.Selected}
+          ?disabled=${pkg.IsUpdating}
+          @change=${(e: Event) => {
+            pkg.Selected = (e.target as HTMLInputElement).checked;
+            this.requestUpdate();
+          }}
+        />
+        <package-row
+          .package=${this.toPackageViewModel(pkg)}
+          .updateVersion=${pkg.LatestVersion}
+          @click=${() => this.dispatchEvent(new CustomEvent("package-selected", {
+            detail: { packageId: pkg.Id, sourceUrl: pkg.SourceUrl },
+            bubbles: true,
+            composed: true,
+          }))}
+        ></package-row>
+        <div class="row-actions">
           ${pkg.IsUpdating
             ? html`<span class="spinner medium" role="status" aria-label="Loading"></span>`
             : html`
@@ -318,7 +236,7 @@ export class UpdatesView extends LitElement {
           <div class="toolbar-right">
             ${this.packages.length > 0
               ? html`
-                  <button ?disabled=${this.isUpdating} @click=${() => this.updateAllSelected()}>
+                  <button class="primary-btn" ?disabled=${this.isUpdating} @click=${() => this.updateAllSelected()}>
                     Update All
                   </button>
                 `

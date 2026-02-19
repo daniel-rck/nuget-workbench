@@ -6,6 +6,7 @@
 out/**
 src/**
 docs/raw/**
+docs/*.md
 .gitignore
 .editorconfig
 .vscode-test.js
@@ -16,6 +17,7 @@ CLAUDE.md
 vsc-extension-quickstart.md
 esbuild.js
 eslint.config.mjs
+tools/**
 **/tsconfig.json
 **/tsconfig.test.json
 **/*.map

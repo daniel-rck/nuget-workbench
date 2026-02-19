@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-1. Create a publisher on [Visual Studio Marketplace](https://marketplace.visualstudio.com/manage) (publisher ID: `daniel-rck`)
+1. Create a publisher on [Visual Studio Marketplace](https://marketplace.visualstudio.com/manage) (publisher ID: `nuget-workbench`)
 2. Generate a Personal Access Token (PAT) in [Azure DevOps](https://dev.azure.com/) with **Marketplace > Manage** scope
 
 ## CI/CD (automated)
@@ -21,7 +21,7 @@ The GitHub Actions workflow publishes automatically on version tags.
 
 ```bash
 npm run package                  # builds releases/nuget-workbench-x.x.x.vsix
-npx @vscode/vsce login daniel-rck   # authenticate with PAT
+npx @vscode/vsce login nuget-workbench   # authenticate with PAT
 npx @vscode/vsce publish --no-dependencies
 ```
 

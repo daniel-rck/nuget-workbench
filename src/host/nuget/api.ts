@@ -301,7 +301,7 @@ export default class NuGetApi {
     this._searchUrl = await this.GetUrlFromNugetDefinition(response, "SearchQueryService");
     if (this._searchUrl == "") throw { message: "SearchQueryService couldn't be found" };
     if (!this._searchUrl.endsWith("/")) this._searchUrl += "/";
-    this._packageInfoUrl = await this.GetUrlFromNugetDefinition(response, "RegistrationsBaseUrl/3.6.0");
+    this._packageInfoUrl = await this.GetRegistrationsBaseUrl(response);
     if (this._packageInfoUrl == "") throw { message: "RegistrationsBaseUrl couldn't be found" };
     if (!this._packageInfoUrl.endsWith("/")) this._packageInfoUrl += "/";
 
@@ -311,6 +311,22 @@ export default class NuGetApi {
     }
 
     Logger.debug(`NuGetApi.EnsureSearchUrl: SearchUrl=${this._searchUrl}, PackageInfoUrl=${this._packageInfoUrl}, VulnerabilityUrl=${this._vulnerabilityUrl}`);
+  }
+
+  private GetRegistrationsBaseUrl(response: AxiosResponse): string {
+    const resources: Array<{ "@type": string; "@id": string }> = response.data.resources ?? [];
+    // Pick the highest-versioned RegistrationsBaseUrl from the service index
+    const matches = resources
+      .filter((r) => r["@type"].startsWith("RegistrationsBaseUrl"))
+      .sort((a, b) => b["@type"].localeCompare(a["@type"]));
+
+    if (matches.length > 0) {
+      Logger.debug(`NuGetApi.GetRegistrationsBaseUrl: Resolved via ${matches[0]["@type"]} -> ${matches[0]["@id"]}`);
+      return matches[0]["@id"];
+    }
+
+    Logger.error("NuGetApi.GetRegistrationsBaseUrl: No RegistrationsBaseUrl found in service index");
+    return "";
   }
 
   private async GetUrlFromNugetDefinition(response: any, type: string): Promise<string> {
