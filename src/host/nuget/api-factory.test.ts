@@ -11,6 +11,8 @@ suite('NuGetApiFactory Tests', () => {
     let getSourcesStub: sinon.SinonStub;
     let workspaceFoldersStub: sinon.SinonStub;
     let loggerDebugStub: sinon.SinonStub;
+    let loggerInfoStub: sinon.SinonStub;
+    let loggerWarnStub: sinon.SinonStub;
     let clearPasswordCacheStub: sinon.SinonStub;
 
     setup(() => {
@@ -28,7 +30,9 @@ suite('NuGetApiFactory Tests', () => {
         ]);
 
         loggerDebugStub = sandbox.stub(Logger, 'debug');
-        
+        loggerInfoStub = sandbox.stub(Logger, 'info');
+        loggerWarnStub = sandbox.stub(Logger, 'warn');
+
         clearPasswordCacheStub = sandbox.stub(PasswordScriptExecutor, 'ClearCache');
     });
 
@@ -80,7 +84,7 @@ suite('NuGetApiFactory Tests', () => {
             const api = await nugetApiFactory.GetSourceApi('https://private.nuget.org');
 
             assert.ok(api);
-            assert.ok(loggerDebugStub.calledWith(sinon.match(/Found credentials/)));
+            assert.ok(loggerInfoStub.calledWith(sinon.match(/Using credentials/)));
         });
 
         test('should log when no credentials found', async () => {
@@ -94,7 +98,7 @@ suite('NuGetApiFactory Tests', () => {
 
             await nugetApiFactory.GetSourceApi('https://api.nuget.org');
 
-            assert.ok(loggerDebugStub.calledWith(sinon.match(/No credentials found/)));
+            assert.ok(loggerWarnStub.calledWith(sinon.match(/No credentials found/)));
         });
 
         test('should use workspace root when available', async () => {
@@ -139,7 +143,7 @@ suite('NuGetApiFactory Tests', () => {
 
             await nugetApiFactory.GetSourceApi('https://source2.nuget.org');
 
-            assert.ok(loggerDebugStub.calledWith(sinon.match(/Found credentials for https:\/\/source2\.nuget\.org/)));
+            assert.ok(loggerInfoStub.calledWith(sinon.match(/Using credentials for https:\/\/source2\.nuget\.org/)));
         });
 
         test('should handle source with only username', async () => {
@@ -155,7 +159,7 @@ suite('NuGetApiFactory Tests', () => {
             const api = await nugetApiFactory.GetSourceApi('https://partial.nuget.org');
 
             assert.ok(api);
-            assert.ok(loggerDebugStub.calledWith(sinon.match(/Found credentials/)));
+            assert.ok(loggerInfoStub.calledWith(sinon.match(/Using credentials/)));
         });
 
         test('should handle source with only password', async () => {
@@ -171,8 +175,8 @@ suite('NuGetApiFactory Tests', () => {
             const api = await nugetApiFactory.GetSourceApi('https://partial.nuget.org');
 
             assert.ok(api);
-            // Should still log "Found credentials" since password is present
-            assert.ok(loggerDebugStub.calledWith(sinon.match(/Found credentials/)));
+            // Should still log "Using credentials" since auth data is present
+            assert.ok(loggerInfoStub.calledWith(sinon.match(/Using credentials/)));
         });
     });
 

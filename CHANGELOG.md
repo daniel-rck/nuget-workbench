@@ -1,6 +1,15 @@
 # Changelog
 
-## 1.1.0 (2026-02-19)
+## Unreleased
+
+- feat: Release script with version bump, changelog update, and dry-run mode (`scripts/release.mjs`)
+- feat: GitHub Actions `workflow_dispatch` trigger for remote releases
+- fix: Lit component tests failing with `cssText` error (JSDOM require hook for `.css.ts` modules)
+- fix: NuGetApiFactory tests using wrong logger stubs and message patterns
+- fix: SearchBar tests updated for `custom-dropdown` component refactoring
+- test: 313 tests passing (up from 197)
+
+## 1.0.1 (2026-02-19)
 
 - fix: Tab sub-views (Updates, Consolidate, Vulnerabilities) now load reliably — `setTab()` was
   calling `querySelector()` synchronously before Lit rendered the new element (microtask timing bug)
@@ -34,5 +43,6 @@
 ### Credits
 
 This extension builds upon:
+
 - [pcislo/vscode-nuget-gallery](https://github.com/pcislo/vscode-nuget-gallery) by [Patryk Cislo](https://github.com/pcislo) (original author)
 - [shis91/vscode-nuget-gallery](https://github.com/shis91/vscode-nuget-gallery) by [shis91](https://github.com/shis91) (major feature additions, CPM, authentication, test infrastructure)

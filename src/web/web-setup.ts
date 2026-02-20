@@ -3,11 +3,19 @@ import * as path from 'path';
 import * as tsConfigPaths from 'tsconfig-paths';
 import * as Module from 'module';
 
-// Hook require to ignore CSS files completely (avoid resolution errors)
+// Hook require to ignore pure CSS files but allow .css.ts/.css.js modules through.
+// Components import styles like `@/web/styles/codicon.css` which resolve to `.css.js`
+// files after compilation. We must let those through so Lit gets CSSResult objects.
 const originalRequire = (Module as any).prototype.require;
 (Module as any).prototype.require = function(id: string) {
     if (typeof id === 'string' && id.endsWith('.css')) {
-        return '';
+        // Try loading the module normally first (handles .css.js compiled from .css.ts)
+        try {
+            return originalRequire.call(this, id);
+        } catch {
+            // Pure .css file with no .js counterpart — return empty string
+            return '';
+        }
     }
     return originalRequire.call(this, id);
 };

@@ -123,12 +123,11 @@ suite('SearchBar Component', () => {
             });
         });
 
-        // Find the source select (second select element, first is sort)
-        const selects = searchBar.shadowRoot?.querySelectorAll('select');
-        const sourceSelect = selects?.[1] as HTMLSelectElement;
-        assert.ok(sourceSelect, 'Source select should exist');
-        sourceSelect.value = newSource;
-        sourceSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        // Find the source dropdown (second custom-dropdown, first is sort)
+        const dropdowns = searchBar.shadowRoot?.querySelectorAll('custom-dropdown');
+        const sourceDropdown = dropdowns?.[1];
+        assert.ok(sourceDropdown, 'Source dropdown should exist');
+        sourceDropdown.dispatchEvent(new CustomEvent('change', { detail: newSource, bubbles: true, composed: true }));
 
         await eventPromise;
     });
@@ -173,26 +172,27 @@ suite('SearchBar Component', () => {
         await eventPromise;
     });
 
-    test('should render sources in dropdown', async () => {
+    test('should render source and sort dropdowns', async () => {
         await searchBar.updateComplete;
 
         const shadowRoot = searchBar.shadowRoot;
         assert.ok(shadowRoot, "Shadow root should exist");
 
-        // Source select is the second select (first is sort dropdown)
-        const selects = shadowRoot.querySelectorAll('select');
-        assert.strictEqual(selects.length, 2, "Should have sort and source dropdowns");
+        // Both dropdowns are custom-dropdown elements (sort + source)
+        const dropdowns = shadowRoot.querySelectorAll('custom-dropdown');
+        assert.strictEqual(dropdowns.length, 2, "Should have sort and source dropdowns");
 
-        const sourceSelect = selects[1];
-        const options = sourceSelect.querySelectorAll('option');
+        // Source dropdown is the second one; verify its options via the property
+        const sourceDropdown = dropdowns[1] as any;
+        const options = sourceDropdown.options as { value: string; label: string }[];
         // Expected: 1 (All) + 2 (Sources) = 3
         assert.strictEqual(options.length, 3);
 
         assert.strictEqual(options[0].value, "");
-        assert.strictEqual(options[0].textContent?.trim(), "All");
+        assert.strictEqual(options[0].label, "All");
         assert.strictEqual(options[1].value, "https://api.nuget.org/v3/index.json");
-        assert.strictEqual(options[1].textContent?.trim(), "NuGet.org");
+        assert.strictEqual(options[1].label, "NuGet.org");
         assert.strictEqual(options[2].value, "C:/LocalSource");
-        assert.strictEqual(options[2].textContent?.trim(), "Local");
+        assert.strictEqual(options[2].label, "Local");
     });
 });
