@@ -2,9 +2,7 @@
 
 **A full-featured NuGet package manager for Visual Studio Code** — browse, install, update, and audit packages across all your .NET projects without leaving the editor.
 
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/nuget-workbench.nuget-workbench?label=Marketplace&color=6366f1)](https://marketplace.visualstudio.com/items?itemName=nuget-workbench.nuget-workbench)
-[![Installs](https://img.shields.io/visual-studio-marketplace/i/nuget-workbench.nuget-workbench?color=6366f1)](https://marketplace.visualstudio.com/items?itemName=nuget-workbench.nuget-workbench)
-[![GitHub Release](https://img.shields.io/github/v/release/nuget-workbench/nuget-workbench-vscode)](https://github.com/nuget-workbench/nuget-workbench-vscode/releases)
+[![Release](https://img.shields.io/github/v/release/nuget-workbench/nuget-workbench-vscode?color=6366f1)](https://marketplace.visualstudio.com/items?itemName=nuget-workbench.nuget-workbench)
 [![CI](https://img.shields.io/github/actions/workflow/status/nuget-workbench/nuget-workbench-vscode/ci.yml?label=CI)](https://github.com/nuget-workbench/nuget-workbench-vscode/actions)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![VS Code](https://img.shields.io/badge/VS%20Code-1.87%2B-grey)](https://code.visualstudio.com/)
